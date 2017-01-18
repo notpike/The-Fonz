@@ -37,16 +37,22 @@ https://fccid.io/2AHXI-T1
 
 
 Here's an example of what the transmission looks like (in hex), on/off button with the PIN 000 
+
 ==Preamble==  ==Key==  ==Message== ==?==
+
 ffff00a2888a2   aaaa   8888aa2aa22  20
 
 And the on/off button with PIN 255
+
 ==Preamble==  ==Key==  ==Message== ==?==
+
 ffff00a2888a2 22222222 8888aa2aa22  20
 
 The message sometimes changes with the key but the key will be same regardless of the button pressed.  
 Here's an example of the on/off button with the pin 001
+
 ==Preamble==  ==Key==  ==Message== ==?==
+
 ffff00a2888a2  2aaa    a2222a8aa88   88
 
 -=Work notes=-
