@@ -1,11 +1,3 @@
-  _____ _            _____               
- |_   _| |__   ___  |  ___|__  _ __  ____
-   | | | '_ \ / _ \ | |_ / _ \| '_ \|_  /
-   | | | | | |  __/ |  _| (_) | | | |/ / 
-   |_| |_| |_|\___| |_|  \___/|_| |_/___|
-
-          "A Frindly Passive Scanner"
-
 The Fonz, a friendly passive scanner for finding out which pin is being used for a TouchTunes Jukebox (Gen 2 and above) wireless remote. TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK, and uses a pin (000-255) for "security". 
 This script was meant to be used with RfCat and the Yard Stick One.
 
