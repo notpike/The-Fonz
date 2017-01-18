@@ -3,14 +3,22 @@ This script was meant to be used with RfCat and the Yard Stick One.
 
 -=Quick Start Guide=-
 
-1.) ~$ git clone https://github.com/notpike/The-Fonz.git
+1.) ~$ git clone https://github.com/notpike/The-Fonz.git\n
+
 2.) ~$ cd The-Fonz
+
 3.) ~$ sudo ./The_Fonz.py
+
 4.) Plug in the Yard Stick One
+
 5.) Wait patiently until bartender uses his remote
+
 6.) Input captured PIN into your own personal remote
+
 7.) Pocket your remote, Smack the jukebox while skiping that one Jusin Bieber song while saying, "AYEEE!!"
+
 8.) Injoy your free drinks from your freinds :D
+
 
 
 Here's more info about the wireless remote.
