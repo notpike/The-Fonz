@@ -16,12 +16,15 @@ This script was meant to be used with RfCat and the Yard Stick One.
 Here's more info about the wireless remote.
 
 -=User manule=-
+
 http://productwarranty.touchtunes.com/download/attachments/1179814/900303-001-Remote%20Control%20User%20Guide-R01.pdf?version=1&modificationDate=1373656509000&api=v2
 
 -=3rd Aftermarket Replacment Remote (The one I tested)=-
+
 http://www.pressonproducts.com/t1-jukebox-remote-touchtunes-compatible/
 
 -=FCC info=-
+
 https://fccid.io/2AHXI-T1
 
 
