@@ -30,11 +30,12 @@ banner = """  _____ _            _____
  |_   _| |__   ___  |  ___|__  _ __  ____
    | | | '_ \ / _ \ | |_ / _ \| '_ \|_  /
    | | | | | |  __/ |  _| (_) | | | |/ / 
-   |_| |_| |_|\___| |_|  \___/|_| |_/___|
+   |_| |_| |_|\___| |_|  \___/|_| |_/___| V0.2
 
           "A Frindly Passive Scanner"
               Hit <ENTER> to exit\n"""
 
+#The D lol
 d = RfCat()
 
 #Values(keys) for each PIN, in order (000-255) when they are transited.
@@ -66,6 +67,25 @@ nukecodes = ['aaaa', '2aaa', '8aaa', '22aaa', 'a2aa', '28aaa', '88aaa', '222aa',
            '28a2222', '88a2222', '2228888', 'a88888', '2a22222', '8a22222', '2288888', 'a222222', '2888888',
            '8888888', '22222222']
 
+#Both command values for each button
+#Two Values for each command, it switches back and forth for each Key used 
+commands = {'On_Off': ['8888aa2aa22200','a2222a8aa88880'], 'Pause': ['a22a288a88a200','a88a8a22a22880'],
+	'P1': ['888aa8aa222200','a222aa2a888880'], 'P2_Edit_Queue': ['88aaa2a2222200', 'a22aa8a8888880'],
+	'P3_Skip': ['22a28aa228a200','88a8a2a88a2880'], 'F1_Restart': ['a2aa88a2222200','a8aaa228888880'],
+	'F2_Key': ['28aaa8a2222200','8a2aaa28888880'], 'F3_Mic_A_Mute': ['a22aa22a222200','a88aa88a888880'],
+	'F4_Mic_B_Mute': ['288aaa2a222200','8a22aa8a888880'], 'Mic_Vol_Plus_Up_Arrow': ['2222a2aa88a200','8888a8aaa22880'],
+	'Mic_Vol_Minus_Down_Arrow': ['2aaaa222222200','8aaaa888888880'], 'A_Left_Arrow': ['2aa2a8888a2200','8aa8aa22228880'],
+	'B_Right_Arrow': ['22a8aa888a2200','88aa2aa2228880'], 'OK': ['8aa2a2888a2200','a2a8a8a2228880'],
+	'Music_Vol_Zone_1Up': ['228aaa8a222200','88a2aaa2888880'], 'Music_Vol_Zone_1Down': ['8a2aa28a222200','a28aa8a2888880'],
+	'Music_Vol_Zone_2Up': ['2a2aa88a222200','8a8aaa22888880'], 'Music_Vol_Zone_2Down': ['a8aa888a222200','aa2aa222888880'],
+	'Music_Vol_Zone_3Up': ['22aaaa22222200','88aaaa88888880'], 'Music_Vol_Zone_3Down': ['8aaa8a22222200','a2aaa288888880'],
+	'1': ['2222aaaa222200','8888aaaa888880'], '2': ['aa2a8888a22200','aa8aa222288880'], '3': ['2a8aa888a22200','8aa2aa22288880'],
+	'4': ['8a8aa288a22200','a2a2a8a2288880'], '5': ['22a2aa88a22200','88a8aaa2288880'], '6': ['a28aa228a22200','a8a2a88a288880'],
+	'7': ['28a2aa28a22200','8a28aa8a288880'], '8': ['88a2a8a8a22200','a228aa2a288880'], '9': ['2228aaa8a22200','888a2aaa288880'],
+	'0': ['2a22aa22a22200','8a88aa88a88880'], 'Music_Karaoke': ['a88aa222a22200','aa22a888a88880'],
+	'Lock_Queue': ['8a22a8a2a22200','a288aa28a88880']} 
+
+
 
 #Checks to see the packet receaved is valid
 #looks for the preamble FFFF00A2888A2
@@ -91,11 +111,30 @@ def PINfind(pkt):
         for nuke in nukecodes:
                 PreNuke = '00a2888a2'+nuke #preamble plus the key
                 if re.search(PreNuke, packet):
-                        pins.append(pin)
-                        pin +=1
+        		if len(str(pin)) == 1:
+                		StrPin = "00"+str(pin)
+				pins.append(StrPin)
+				pin +=1
+        		elif len(str(pin)) == 2:
+                		StrPin = "0"+str(pin)
+				pins.append(StrPin)
+				pin +=1
+        		elif len(str(pin)) == 3:
+                	        pins.append(str(pin))
+                        	pin +=1
                 else:
                         pin +=1
+
         return pins
+
+#find what the command is in a captured packet, 
+def CommandFind(pkt):
+    packet = str(pkt.encode('hex'))
+    for button in commands: #for each key in commands
+        value = commands[str(button)]
+        for i in value: #Each value is a list of 2
+            if re.search(i, packet):
+                return str(button) #Once re returns true, it returns the current key from the loop
 
                   
 #Sets modes for the Yard Stick One and prints results
@@ -115,9 +154,10 @@ def scan(d):
                         pkt, ts = d.RFrecv() #RX packet and timestamp
                         if Vpkt(pkt):
                                 pins = PINfind(pkt)
+                                command = CommandFind(pkt)
                                 time = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
                                 packet = str(pkt.encode('hex'))
-                                print "<*> %s: %s PIN: %s" % (time,packet,pins) 
+                                print "<*> %s: %s PIN:  %s Command:  %s"  % (time,packet,pins,command) 
 
                 except ChipconUsbTimeoutException:
                         pass
