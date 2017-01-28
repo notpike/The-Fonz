@@ -22,36 +22,51 @@
 #rflib and vstruct pulled from https://github.com/ecc1/rfcat
 #Written by NotPike, Twitter @pyfurry
 
+
 from rflib import *
 import datetime
+import time
+import sys
 
 
-banner = """  _____ _            _____               
- |_   _| |__   ___  |  ___|__  _ __  ____
-   | | | '_ \ / _ \ | |_ / _ \| '_ \|_  /
-   | | | | | |  __/ |  _| (_) | | | |/ / 
-   |_| |_| |_|\___| |_|  \___/|_| |_/___| V0.2
+banner = """    _____ _            _____               
+   |_   _| |__   ___  |  ___|__  _ __  ____
+     | | | '_ \ / _ \ | |_ / _ \| '_ \|_  /
+     | | | | | |  __/ |  _| (_) | | | |/ / 
+     |_| |_| |_|\___| |_|  \___/|_| |_/___| V0.3
 
-          "A Frindly Passive Scanner"
-              Hit <ENTER> to exit\n"""
+"Arthur, it's morning, have you been here all night?"
+              Slect a number to begin!\n"""
+
+mainmenu = ''' -=Main Menu=-
+1.) Scan
+2.) TX
+3.) Exit \n'''
+
+###the ID Vender and ID Product of the YSO, used to restart if libusb fails
+##from usb.core import find as finddev
+##dev = finddev(idVendor=0x1d50, idProduct=0x605b)
+##dev.reset() 
+
 
 #The D lol
 d = RfCat()
+
 
 #Values(keys) for each PIN, in order (000-255) when they are transited.
 #ex. nukecode[0] ==  PIN 000, nukecode[50] == PIN 050, and nukecode[255] == PIN 255   
 nukecodes = ['aaaa', '2aaa', '8aaa', '22aaa', 'a2aa', '28aaa', '88aaa', '222aa', '222aa', '2a2aa',
            '8a2aa', '228aa', 'a22aa', '288aa', '888aa', '2222aa', 'aa2a', '2a8aa', '8a8aa', '22a2a',
            'a28aa', '28a2a', '88a2a', '2228aa', 'a88aa', '2a22a', '8a22a', '2288aa', 'a222a', '2888aa',
-           '8888aa', '22222a', 'aa8aa', '2aa2a', '8aa2a', '22a8a', 'a2a2a', '28a8a', '88a8a', '222a2a',
+           '8888aa', '22222a', 'aa8a', '2aa2a', '8aa2a', '22a8a', 'a2a2a', '28a8a', '88a8a', '222a2a',
            'a8a2a', '2a28a', '8a28a', '228a2a', 'a228a', '288a2a', '888a2a', '22228a', 'aa22a', '2a88a',
-           '8a88a', '22a22', 'a288a', '28a22a', '88a22a', '22288a', 'a888a', '2a222a', '8a222a', '22888a',
-           'a2222a', '28888a', '88888a', '222222a', 'aaa2a', '2aa8a', '8aa8a', '22aa2', 'a2a8a', '28aa2',
+           '8a88a', '22a22a', 'a288a', '28a22a', '88a22a', '22288a', 'a888a', '2a222a', '8a222a', '22888a',
+           'a2222a', '28888a', '88888a', '222222a', 'aaa2', '2aa8a', '8aa8a', '22aa2', 'a2a8a', '28aa2',
            '88aa2', '222a8a', 'a8a8a', '2a2a2', '8a2a2', '228a8a', 'a22a2', '288a8a', '888a8a', '2222a2',
            'aa28a', '2a8a2', '8a8a2', '22a28a', 'a28a2', '28a28a', '88a28a', '2228a2', 'a88a2', '2a228a',
            '8a228a', '2288a2', 'a2228a', '2888a2', '8888a2', '222228a', 'aa88a', '2aa22', '8aa22', '22a88a',
            'a2a22', '28a88a', '88a88a', '222a22', 'a8a22', '2a288a', '8a288a', '228a22', 'a2288a', '288a22',
-           '888a22', '222288', 'aa222', '2a888a', '8a888a', '22a222', 'a2888a', '28a222', '88a222', '222888a',
+           '888a22', '222288a', 'aa222', '2a888a', '8a888a', '22a222', 'a2888a', '28a222', '88a222', '222888a',
            'a8888a', '2a2222', '8a2222', '228888a', 'a22222', '288888a', '888888a', '2222222', 'aaa8', '2aaa2',
            '8aaa2', '22aa8', 'a2aa2', '28aa8', '88aa8', '222aa2', 'a8aa2', '2a2a8', '8a2a8', '228aa2', 'a22a8',
            '288aa2', '888aa2', '2222a8', 'aa2a2', '2a8a8', '8a8a8', '22a2a2', 'a28a8', '28a2a2', '88a2a2', '2228a8',
@@ -67,30 +82,47 @@ nukecodes = ['aaaa', '2aaa', '8aaa', '22aaa', 'a2aa', '28aaa', '88aaa', '222aa',
            '28a2222', '88a2222', '2228888', 'a88888', '2a22222', '8a22222', '2288888', 'a222222', '2888888',
            '8888888', '22222222']
 
+
 #Both command values for each button
 #Two Values for each command, it switches back and forth for each Key used 
-commands = {'On_Off': ['8888aa2aa22200','a2222a8aa88880'], 'Pause': ['a22a288a88a200','a88a8a22a22880'],
-	'P1': ['888aa8aa222200','a222aa2a888880'], 'P2_Edit_Queue': ['88aaa2a2222200', 'a22aa8a8888880'],
-	'P3_Skip': ['22a28aa228a200','88a8a2a88a2880'], 'F1_Restart': ['a2aa88a2222200','a8aaa228888880'],
-	'F2_Key': ['28aaa8a2222200','8a2aaa28888880'], 'F3_Mic_A_Mute': ['a22aa22a222200','a88aa88a888880'],
-	'F4_Mic_B_Mute': ['288aaa2a222200','8a22aa8a888880'], 'Mic_Vol_Plus_Up_Arrow': ['2222a2aa88a200','8888a8aaa22880'],
-	'Mic_Vol_Minus_Down_Arrow': ['2aaaa222222200','8aaaa888888880'], 'A_Left_Arrow': ['2aa2a8888a2200','8aa8aa22228880'],
-	'B_Right_Arrow': ['22a8aa888a2200','88aa2aa2228880'], 'OK': ['8aa2a2888a2200','a2a8a8a2228880'],
-	'Music_Vol_Zone_1Up': ['228aaa8a222200','88a2aaa2888880'], 'Music_Vol_Zone_1Down': ['8a2aa28a222200','a28aa8a2888880'],
-	'Music_Vol_Zone_2Up': ['2a2aa88a222200','8a8aaa22888880'], 'Music_Vol_Zone_2Down': ['a8aa888a222200','aa2aa222888880'],
-	'Music_Vol_Zone_3Up': ['22aaaa22222200','88aaaa88888880'], 'Music_Vol_Zone_3Down': ['8aaa8a22222200','a2aaa288888880'],
-	'1': ['2222aaaa222200','8888aaaa888880'], '2': ['aa2a8888a22200','aa8aa222288880'], '3': ['2a8aa888a22200','8aa2aa22288880'],
-	'4': ['8a8aa288a22200','a2a2a8a2288880'], '5': ['22a2aa88a22200','88a8aaa2288880'], '6': ['a28aa228a22200','a8a2a88a288880'],
-	'7': ['28a2aa28a22200','8a28aa8a288880'], '8': ['88a2a8a8a22200','a228aa2a288880'], '9': ['2228aaa8a22200','888a2aaa288880'],
-	'0': ['2a22aa22a22200','8a88aa88a88880'], 'Music_Karaoke': ['a88aa222a22200','aa22a888a88880'],
-	'Lock_Queue': ['8a22a8a2a22200','a288aa28a88880']} 
+KeyButton = [] #Global for commands's keys
+commands = {'On_Off': ['8888aa2aa2220','a2222a8aa8888'], 'Pause': ['a22a288a88a20','a88a8a22a2288'],
+        'P1': ['888aa8aa22220','a222aa2a88888'], 'P2_Edit_Queue': ['88aaa2a222220', 'a22aa8a888888'],
+        'P3_Skip': ['22a28aa228a20','88a8a2a88a288'], 'F1_Restart': ['a2aa88a222220','a8aaa22888888'],
+        'F2_Key': ['28aaa8a222220','8a2aaa2888888'], 'F3_Mic_A_Mute': ['a22aa22a22220','a88aa88a88888'],
+        'F4_Mic_B_Mute': ['288aaa2a22220','8a22aa8a88888'], 'Mic_Vol_Plus_Up_Arrow': ['2222a2aa88a20','8888a8aaa2288'],
+        'Mic_Vol_Minus_Down_Arrow': ['2aaaa22222220','8aaaa88888888'], 'A_Left_Arrow': ['2aa2a8888a220','8aa8aa2222888'],
+        'B_Right_Arrow': ['22a8aa888a220','88aa2aa222888'], 'OK': ['8aa2a2888a220','a2a8a8a222888'],
+        'Music_Vol_Zone_1Up': ['228aaa8a22220','88a2aaa288888'], 'Music_Vol_Zone_1Down': ['8a2aa28a22220','a28aa8a288888'],
+        'Music_Vol_Zone_2Up': ['2a2aa88a22220','8a8aaa2288888'], 'Music_Vol_Zone_2Down': ['a8aa888a22220','aa2aa22288888'],
+        'Music_Vol_Zone_3Up': ['22aaaa2222220','88aaaa8888888'], 'Music_Vol_Zone_3Down': ['8aaa8a2222220','a2aaa28888888'],
+        '1': ['2222aaaa22220','8888aaaa88888'], '2': ['aa2a8888a2220','aa8aa22228888'], '3': ['2a8aa888a2220','8aa2aa2228888'],
+        '4': ['8a8aa288a2220','a2a2a8a228888'], '5': ['22a2aa88a2220','88a8aaa228888'], '6': ['a28aa228a2220','a8a2a88a28888'],
+        '7': ['28a2aa28a2220','8a28aa8a28888'], '8': ['88a2a8a8a2220','a228aa2a28888'], '9': ['2228aaa8a2220','888a2aaa28888'],
+        '0': ['2a22aa22a2220','8a88aa88a8888'], 'Music_Karaoke': ['a88aa222a2220','aa22a888a8888'],
+        'Lock_Queue': ['8a22a8a2a2220','a288aa28a8888']}
 
+
+#Because I coun't figure out the corlation between the PINs and both commands used, I just hard coded it in order to chose the right command from the commands values
+#0 refers to the 0 position in the value (list) in dictonary 'commands', 1 to the 1 position.
+#ex. for key On_Off, value 0 == '8888aa2aa22200' and value 1 == 'a2222a8aa88880'
+Wcommand = 0 #Global for WhichCommand
+WhichCommand = [0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1,
+                0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0,
+                0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0,
+                1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1,
+                0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1,
+                0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1,
+                1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1,
+                0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0,
+                0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1,
+                0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0]
 
 
 #Checks to see the packet receaved is valid
 #looks for the preamble FFFF00A2888A2
 #FFFF is cut off by d.setMdmSyncWord()
-def Vpkt(pkt): 
+def VerifyPkt(pkt): 
         if ord(pkt[0]) != 0x00:
                 return False
         if ord(pkt[1]) != 0xa2:
@@ -104,41 +136,44 @@ def Vpkt(pkt):
 
 #finds what the PIN is in a captured packet, not perfict because it may return mutable pins.
 #TODO improve regex pattern so only 1 pin is returned
-def PINfind(pkt):
+def PinFind(pkt, command):
         packet = str(pkt.encode('hex'))
         pin = 0
-        pins = [] #
+        PinValue = ''
         for nuke in nukecodes:
-                PreNuke = '00a2888a2'+nuke #preamble plus the key
-                if re.search(PreNuke, packet):
-        		if len(str(pin)) == 1:
-                		StrPin = "00"+str(pin)
-				pins.append(StrPin)
-				pin +=1
-        		elif len(str(pin)) == 2:
-                		StrPin = "0"+str(pin)
-				pins.append(StrPin)
-				pin +=1
-        		elif len(str(pin)) == 3:
-                	        pins.append(str(pin))
-                        	pin +=1
-                else:
-                        pin +=1
+                try: #keeps the prgram from crashing if 'command' isn't returned as a posable value from the dictonary 'commands'
+                        for value in commands[str(command)]: #compaires the 2 posable command values with the whole packet to find an exact PIN
+                                if re.search(value, packet): #makes sure the command is in the packet
+                                        PreNuke = '00a2888a2'+nuke+value #preamble plus the key and command
+                                        if re.search(PreNuke, packet):
+                                                if len(str(pin)) == 1:
+                                                        PinValue = "00"+str(pin)
+                                                        pin +=1
+                                                elif len(str(pin)) == 2:
+                                                        PinValue = "0"+str(pin)                                                
+                                                        pin +=1
+                                                elif len(str(pin)) == 3:
+                                                        PinValue = (str(pin))
+                                                        pin +=1
+                                        else:
+                                                pin +=1
+                except KeyError:
+                        pass
+        return PinValue
 
-        return pins
 
-#find what the command is in a captured packet, 
+#Find's wich command use in the captured packet, 
 def CommandFind(pkt):
     packet = str(pkt.encode('hex'))
-    for button in commands: #for each key in commands
-        value = commands[str(button)]
+    for button in commands: #For each key in commands
+        value = commands[str(button)] 
         for i in value: #Each value is a list of 2
             if re.search(i, packet):
                 return str(button) #Once re returns true, it returns the current key from the loop
 
-                  
+
 #Sets modes for the Yard Stick One and prints results
-def scan(d):
+def Scan(d):
         d.setFreq(433.92e6)
         d.setMdmModulation(MOD_ASK_OOK)
         d.setMdmDRate(1766)
@@ -147,19 +182,140 @@ def scan(d):
         d.setMdmSyncWord(0x0000ffff) #FFFF is the beging of the preamble and won't be displayed, rflib assumes you know it's there when you set this variable.
         d.setMdmNumPreamble(0)
         d.setMaxPower()
-        d.makePktFLEN(15)
+        d.makePktFLEN(16)
 
+        print "-=Hit <ENTER> to stop=-"
         while not keystop():
+                pkt, ts = d.RFrecv() #RX packet and timestamp
                 try:
-                        pkt, ts = d.RFrecv() #RX packet and timestamp
-                        if Vpkt(pkt):
-                                pins = PINfind(pkt)
+                        if VerifyPkt(pkt):
                                 command = CommandFind(pkt)
+                                pin = PinFind(pkt, command)
                                 time = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
                                 packet = str(pkt.encode('hex'))
-                                print "<*> %s: %s PIN:  %s Command:  %s"  % (time,packet,pins,command) 
+                                print "<*> %s: TX:ffff%s PIN:%s  Command: %s"  % (time,packet,pin,command) 
 
                 except ChipconUsbTimeoutException:
                         pass
+
+
+#makes a reveresed list of commands and refrences it to the user's choice
+def TxMenu():
+        pin = PinsAnsMenu()
+        command = CommandAnsMenu()
+        repeat = TimesAnsMenu()
+
+        FullCommand = 'ffff00a2888a2'+pin+command
+        ##CommandEncode = "".join('\\x' + FullCommand[i:i+2] for i in xrange(0,len(FullCommand),2)) # Str Hex to Encoded Hex, Thans jeek! :D
+        #CommandEncode = FullCommand.decode('hex')
+        
+        print "\nWARNING! YOU'RE ABOUT TO DO SOME COOL THINGS!"
+        TxAns = raw_input("Are you cool like the Fonz to TX '"+FullCommand+"', '"+KeyButton+"' "+repeat+" times's? [Y/N]:")
+        if str.lower(TxAns) == 'n':
+                MainMenu()
+        elif str.lower(TxAns) == 'y':
+                print '\nTXing...\n'
+                TX(FullCommand.decode('hex'), int(repeat)) #Dose the thing with the radio thin
+                MainMenu()
+        elif TxAns != '':
+                print "\nNaw, you don goofed so you're not that cool... Please try again thou! :D"
+                sys.exit()
+
+
+
+def PinsAnsMenu():
+        pin = 0
+        try:
+                PinAns=raw_input("Which PIN do you want to use? [000-255]: ")
+                if int(PinAns) >= 256:
+                        print "\n Not a valid choice, please try again... \n"
+                        time.sleep(.5)
+                        PinsAnsMenu()                        
+                elif int(PinAns) >= 0 and int(PinAns) <= 255:
+                        pin = nukecodes[int(PinAns)]
+                        global Wcommand
+                        Wcommand = WhichCommand[int(PinAns)] #choses between the 2 posable commands
+                        return pin
+        except ValueError:
+                print "\n Not a valid choice, please try again... \n"
+                time.sleep(.5)
+                PinsAnsMenu()
+       
+
+
+def CommandAnsMenu():
+        global KeyButton
+        items = commands.keys()
+        items.sort(reverse=1) #anti-alphabetical order
+        choice = 0
+        for button in items:
+                choice +=1
+                print '%i.) %s' %(choice, button)
+        print '%i.) Back \n' %(choice+1)
+        try:
+                CommandAns=raw_input('Pick a command. Select [1-%i]: ' %(choice+1))
+                if int(CommandAns) > choice+1 or int(CommandAns) <=0:
+                        print "\n Not a valid choice, please try again... \n"
+                        time.sleep(.5)
+                        CommandAnsMenu()                        
+                elif int(CommandAns) == choice+1:
+                        MainMenu()
+                elif int(CommandAns) >= 1 and int(CommandAns) <= choice:
+                        KeyButton = items[int(CommandAns)-1] #the chosen command in the items list
+                        value = commands[str(KeyButton)]
+                        command = value[Wcommand]
+                        return command
+        except ValueError:
+                print "\n Not a valid choice, please try again... \n"
+                time.sleep(.5)
+                CommandAnsMenu()
+        
+
+
+def TimesAnsMenu():
+        try:       
+                TimesAns=raw_input("Repeat how many times? [1-65535]: ")
+                if int(TimesAns) >= 65536 or int(TimesAns) <=0:
+                        print "\n Not a valid choice, please try again... \n"
+                        time.sleep(.5)
+                        TimesAnsMenu()                        
+                elif int(TimesAns) >= 1 and int(TimesAns) <= 65535:
+                                times = int(TimesAns)
+                                return str(times)
+        except ValueError:
+                print "\n Not a valid choice, please try again... \n"
+                time.sleep(.5)
+                TimesAnsMenu()
+
+
+                
+def TX(data, repeat):
+        d.setFreq(433.92e6)
+        d.setMdmModulation(MOD_ASK_OOK)
+        d.setMdmDRate(1766)
+        d.setMdmNumPreamble(0) #Still sends a 16bit 101010 for the preamble...
+        d.setMdmSyncWord(0)
+        d.setMaxPower()
+        d.RFxmit(data, repeat)
+
+        
+def MainMenu():
+        print mainmenu
+        ans=raw_input('Select [1-3]: ')
+        if ans == "1":
+                Scan(d)
+        elif ans == "2":
+                TxMenu()
+        elif ans == "3":
+                sys.exit()
+        elif ans != "":
+                print "\n Not a valid choice, please try again... \n"
+                time.sleep(.5)
+                MainMenu()
+
+
+
 print(banner)
-scan(d)
+MainMenu()
+
+

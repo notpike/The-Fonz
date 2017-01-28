@@ -1,3 +1,7 @@
+-=UPDATE V0.3=-
+*Added TX feture! You now have a 'hopfully' working remote! (Not Tested Yet, Only compaired to the origional remote)
+*Improved PIN discovery so it only returns 1 answer
+
 The Fonz, a friendly passive scanner for finding out which pin is being used for a TouchTunes Jukebox (Gen 2 and above) wireless remote. TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK, and uses a pin (000-255) for "security". 
 This script was meant to be used with RfCat and the Yard Stick One.
 
@@ -11,11 +15,11 @@ This script was meant to be used with RfCat and the Yard Stick One.
 
 4.) Plug in the Yard Stick One
 
-5.) Wait patiently until bartender uses his remote
+5.) Choose 'Scan' to liston for transmissions
 
-6.) Input captured PIN into your own personal remote
+6.) Input captured PIN into your own personal remote or use 'TX' to transmit commands
 
-7.) Pocket your remote, Smack the jukebox while skiping that one Jusin Bieber song while saying, "AYEEE!!"
+7.) Pocket your remote or cordinate with your wingman, Smack the jukebox while skiping that one Jusin Bieber song while saying, "AYEEE!!"
 
 8.) Injoy your free drinks from your freinds :D
 
