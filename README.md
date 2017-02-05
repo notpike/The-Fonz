@@ -12,7 +12,7 @@ This script was meant to be used with RfCat and the Yard Stick One.
 
 -=Quick Start Guide=-
 
-1.) ~$ git clone https://github.com/notpike/The-Fonz.git\n
+1.) ~$ git clone https://github.com/notpike/The-Fonz.git
 
 2.) ~$ cd The-Fonz
 
