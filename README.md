@@ -1,3 +1,8 @@
+
+-=UPDATE V0.4=-
+*Added Brute Force feture! You now can try every PIN posability for 1 command. Enter in 999 for the PIN and you'll be able to brute force a command.
+*Improved menu, no longer bugs out when you enter the wrong choice.
+
 -=UPDATE V0.3=-
 *Added TX feture! You now have a 'hopfully' working remote! (Not Tested Yet, Only compaired to the origional remote)
 *Improved PIN discovery so it only returns 1 answer
