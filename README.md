@@ -1,3 +1,6 @@
+-=UPDATE V0.5=-
+*Removed redundant re-transmission in the Brute Force feature, ~20sec faster now.
+*Prints the TX codes during a Brute Force.
 
 -=UPDATE V0.4=-
 *Added Brute Force feture! You now can try every PIN posability for 1 command. Enter in 999 for the PIN and you'll be able to brute force a command.

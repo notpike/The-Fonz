@@ -199,7 +199,7 @@ def Scan(d):
         MainMenu()
 
 
-def TX(data, repeat):
+def TX(data, repeat=0):
         d.setFreq(433.92e6)
         d.setMdmModulation(MOD_ASK_OOK)
         d.setMdmDRate(1766)
@@ -267,7 +267,8 @@ def BruteForceThisMotherFucker():
                                 FullCommand = 'ffff00a2888a2'+pin+BruteCommand
                                 if len(FullCommand) % 2 != 0: #Makes sure things are even
                                         FullCommand = FullCommand+'0'
-                                TX(FullCommand.decode('hex'), 1)
+				print FullCommand
+                                TX(FullCommand.decode('hex'))
                                 PinCounter +=1
                         stop = int(time.time())
                         TotalTime = stop-start
@@ -333,7 +334,7 @@ def TxMenu():
                         Tx = True
                         while Tx:
                                 print '<*> TXing...\n'
-                                TX(FullCommand.decode('hex'), int(repeat)) #Dose the thing with the radio thin
+                                TX(FullCommand.decode('hex'), int(repeat)-1) #Dose the thing with the radio thin
                                 ReTransmit = raw_input("TX Again? [Y/N]")
                                 if str.lower(ReTransmit) == 'n':
                                         Tx = False
@@ -407,7 +408,7 @@ def TimesMenu():
         loop = True
         while loop:
                 try:       
-                        TimesAns=raw_input("Repeat how many times? [1-65535]: ")
+                        TimesAns=raw_input("TX how many times? [1-65535]: ")
                         if int(TimesAns) <= 65535:
                                         times = int(TimesAns)
                                         loop = False
