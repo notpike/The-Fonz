@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#The Fonz, a friendly TouchTunes Remote imulation tool used for finding PIN's, brute forcing, and genural jukebox control.
+#The Fonz, a friendly TouchTunes Remote emulation tool used for finding PIN's, brute forcing, and genural jukebox control.
 #TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK and uses a pin (000-255) for "security". 
 #This script was meant to be used with RfCat and the Yard Stick One.
 
