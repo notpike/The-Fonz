@@ -10,7 +10,7 @@
 *Added TX feture! You now have a 'hopfully' working remote! (Not Tested Yet, Only compaired to the origional remote)
 *Improved PIN discovery so it only returns 1 answer
 
-The Fonz, a friendly passive scanner for finding out which pin is being used for a TouchTunes Jukebox (Gen 2 and above) wireless remote. TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK, and uses a pin (000-255) for "security". 
+The Fonz, a friendly passive scanner and transmiter for the TouchTunes Jukebox (Gen 2 and above) wireless remote. TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK, and uses a pin (000-255) for "security". 
 This script was meant to be used with RfCat and the Yard Stick One.
 
 -=Quick Start Guide=-
