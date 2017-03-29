@@ -23,7 +23,7 @@ This script was meant to be used with RfCat and the Yard Stick One.
 
 4.) Plug in the Yard Stick One
 
-5.) Choose 'Scan' to liston for transmissions
+5.) Choose 'Scan' to listen for transmissions
 
 6.) Input captured PIN into your own personal remote or use 'TX' to transmit commands
 
@@ -68,7 +68,7 @@ Here's an example of the on/off button with the pin 001
 ffff00a2888a2  2aaa    a2222a8aa88   88
 
 -=Work notes=-
-http://pastebin.com/CxuX6XJT
+https://pastebin.com/Ue7UYAPg
 
 
 Based off of Michael Osman's code. https://greatscottgadgets.com/
