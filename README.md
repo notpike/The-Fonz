@@ -1,3 +1,8 @@
+-=UPDATE V0.6=-
+*Cleaned up my code
+*Grouped the commands togeather for the Brute Force atack, %50 faster but not tested.
+*Plans: Add RTL-SDRsdf
+
 -=UPDATE V0.5=-
 *Removed redundant re-transmission in the Brute Force feature, ~20sec faster now.
 *Prints the TX codes during a Brute Force.
