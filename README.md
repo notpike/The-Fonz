@@ -1,7 +1,7 @@
 -=UPDATE V0.6=-
 *Cleaned up my code
 *Grouped the commands togeather for the Brute Force atack, %50 faster but not tested.
-*Plans: Add RTL-SDRsdf
+*Plans: Add RTL-SDR and HackRF suport, Figure out Long TX's.
 
 -=UPDATE V0.5=-
 *Removed redundant re-transmission in the Brute Force feature, ~20sec faster now.
