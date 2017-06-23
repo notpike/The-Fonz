@@ -204,6 +204,7 @@ def TX(data, repeat=0):
         d.setMdmModulation(MOD_ASK_OOK)
         d.setMdmDRate(1766)
         d.setMdmNumPreamble(0) #Still sends a 16bit 101010 for the preamble...
+        d.setMdmSyncMode(0)
         d.setMdmSyncWord(0)
         d.setMaxPower()
         d.RFxmit(data, repeat)
