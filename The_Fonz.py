@@ -20,7 +20,7 @@
 
 #Based off of Michael Osman's code. https://greatscottgadgets.com/
 #rflib and vstruct pulled from https://github.com/ecc1/rfcat
-#Written by NotPike, Twitter @pyfurry
+#Written by NotPike, notpike@horsefucker.org
 
 
 from rflib import *
@@ -34,21 +34,11 @@ banner = """    _____ _            _____
    |_   _| |__   ___  |  ___|__  _ __  ____
      | | | '_ \ / _ \ | |_ / _ \| '_ \|_  /
      | | | | | |  __/ |  _| (_) | | | |/ / 
-     |_| |_| |_|\___| |_|  \___/|_| |_/___| V0.6
+     |_| |_| |_|\___| |_|  \___/|_| |_/___| V0.7
 
 "Arthur, it's morning, have you been here all night?"
               Slect a number to begin!\n"""
 
-
-
-###the ID Vender and ID Product of the YSO, used to restart if libusb fails
-##from usb.core import find as finddev
-##dev = finddev(idVendor=0x1d50, idProduct=0x605b)
-##dev.reset()
-
-
-#The D lol
-d = RfCat()
 
 
 #Values(keys) for each PIN, in order (000-255) when they are transited.
@@ -443,6 +433,7 @@ def BruteMenu():
 
 
 if __name__ == '__main__':
+        d = RfCat()
         os.system('clear')
         print(banner)
         MainMenu()
