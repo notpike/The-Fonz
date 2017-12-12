@@ -1,3 +1,8 @@
+-=UPDATE V0.7=-
+*Can be imported threw the iPython interface with RfCat.
+*>>import The_Fonz as f\n
+*>>f.MainMenu()
+
 -=UPDATE V0.6=-
 *Cleaned up my code
 *Grouped the commands togeather for the Brute Force atack, %50 faster but not tested.
@@ -78,4 +83,4 @@ https://pastebin.com/Ue7UYAPg
 
 Based off of Michael Osman's code. https://greatscottgadgets.com/
 rflib and vstruct pulled from https://github.com/ecc1/rfcat
-Written by NotPike, Twitter @pyfurry
+Written by NotPike, notpike@horsefucker.org
