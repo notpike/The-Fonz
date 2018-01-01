@@ -1,3 +1,7 @@
+-=UPDATE V0.8=-
+*Added Electronic Warfare Mode
+*Jams unwanted signals while you still have full control over the juke box
+
 -=UPDATE V0.7=-
 *Can be imported threw the iPython interface with RfCat.
 *>>import The_Fonz as f
