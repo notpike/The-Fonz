@@ -7,6 +7,8 @@
 *Stops unwanted signals from reaching the target while you still have full control over the juke box
 
 
+
+
 -=UPDATE V0.7=-
 
 *Can be imported threw the iPython interface with RfCat.
@@ -14,6 +16,8 @@
 *>>import The_Fonz as f
 
 *>>f.MainMenu()
+
+
 
 
 -=UPDATE V0.6=-
@@ -25,11 +29,14 @@
 *Plans: Add RTL-SDR and HackRF suport, Figure out Long TX's.
 
 
+
 -=UPDATE V0.5=-
 
 *Removed redundant re-transmission in the Brute Force feature, ~20sec faster now.
 
 *Prints the TX codes during a Brute Force.
+
+
 
 
 -=UPDATE V0.4=-
@@ -39,11 +46,14 @@
 *Improved menu, no longer bugs out when you enter the wrong choice.
 
 
+
 -=UPDATE V0.3=-
 
 *Added TX feture! You now have a 'hopfully' working remote! (Not Tested Yet, Only compaired to the origional remote)
 
 *Improved PIN discovery so it only returns 1 answer
+
+
 
 
 The Fonz, an "easyer" to use passive scanner and transmiter for the TouchTunes Jukebox (Gen 2 and above) wireless remote. TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK, and uses a pin (000-255) for "security". 
