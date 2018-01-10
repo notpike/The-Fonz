@@ -1,33 +1,57 @@
 -=UPDATE V0.8=-
+
 *Added Electronic Warfare Mode
-*Jams unwanted signals while you still have full control over the juke box
+
+*Tatical Jamming inbetween transsmissions 
+
+*Stops unwanted signals from reaching the target while you still have full control over the juke box
+
 
 -=UPDATE V0.7=-
+
 *Can be imported threw the iPython interface with RfCat.
+
 *>>import The_Fonz as f
+
 *>>f.MainMenu()
 
+
 -=UPDATE V0.6=-
+
 *Cleaned up my code
+
 *Grouped the commands togeather for the Brute Force atack, %50 faster but not tested.
+
 *Plans: Add RTL-SDR and HackRF suport, Figure out Long TX's.
 
+
 -=UPDATE V0.5=-
+
 *Removed redundant re-transmission in the Brute Force feature, ~20sec faster now.
+
 *Prints the TX codes during a Brute Force.
 
+
 -=UPDATE V0.4=-
+
 *Added Brute Force feture! You now can try every PIN posability for 1 command. Enter in 999 for the PIN and you'll be able to brute force a command.
+
 *Improved menu, no longer bugs out when you enter the wrong choice.
 
+
 -=UPDATE V0.3=-
+
 *Added TX feture! You now have a 'hopfully' working remote! (Not Tested Yet, Only compaired to the origional remote)
+
 *Improved PIN discovery so it only returns 1 answer
 
-The Fonz, a friendly passive scanner and transmiter for the TouchTunes Jukebox (Gen 2 and above) wireless remote. TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK, and uses a pin (000-255) for "security". 
+
+The Fonz, an "easyer" to use passive scanner and transmiter for the TouchTunes Jukebox (Gen 2 and above) wireless remote. TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK, and uses a pin (000-255) for "security". 
 This script was meant to be used with RfCat and the Yard Stick One.
 
 -=Quick Start Guide=-
+
+0.) ~$ pip install 
 
 1.) ~$ git clone https://github.com/notpike/The-Fonz.git
 
@@ -49,7 +73,7 @@ This script was meant to be used with RfCat and the Yard Stick One.
 
 Here's more info about the wireless remote.
 
--=User manule=-
+-=User Manual=-
 
 http://productwarranty.touchtunes.com/download/attachments/1179814/900303-001-Remote%20Control%20User%20Guide-R01.pdf?version=1&modificationDate=1373656509000&api=v2
 
@@ -86,5 +110,9 @@ https://pastebin.com/Ue7UYAPg
 
 
 Based off of Michael Osman's code. https://greatscottgadgets.com/
+
 rflib and vstruct pulled from https://github.com/ecc1/rfcat
+
+Ported to Portapack-Havoc by Furrtek https://github.com/furrtek/portapack-havoc
+
 Written by NotPike, notpike@horsefucker.org
