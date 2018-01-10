@@ -4,14 +4,22 @@ This script was meant to be used with RfCat and the Yard Stick One.
 
 # Quick Start Guide
 
-0.) 'pip install termcolor pyusb' 
-1.) 'git clone https://github.com/notpike/The-Fonz.git'
-2.) 'cd The-Fonz'
-3.) 'sudo ./The_Fonz.py'
+0.) pip install termcolor pyusb 
+
+1.) git clone https://github.com/notpike/The-Fonz.git
+
+2.) cd The-Fonz
+
+3.) sudo ./The_Fonz.py
+
 4.) Plug in the Yard Stick One
+
 5.) Choose 'Scan' to listen for transmissions
+
 6.) Input captured PIN into your own personal remote or use 'TX' to transmit commands
+
 7.) Pocket your remote or cordinate with your wingman, Smack the jukebox while skiping that one Jusin Bieber song while saying, "AYEEE!!"
+
 8.) Injoy your free drinks from your freinds :D
 
 ###### UPDATE V0.8
@@ -54,25 +62,25 @@ https://pastebin.com/Ue7UYAPg
 
 Here's an example of what the transmission looks like (in hex), on/off button with the PIN 000 
 
-'''
 ==Preamble==  ==Key==  ==Message== ==?==
+
 ffff00a2888a2   aaaa   8888aa2aa22  20
-'''
+
 
 And the on/off button with PIN 255
 
-'''
 ==Preamble==  ==Key==  ==Message== ==?==
+
 ffff00a2888a2 22222222 8888aa2aa22  20
-'''
+
 
 The message sometimes changes with the key but the key will be same regardless of the button pressed.  
 Here's an example of the on/off button with the pin 001
  
- '''
 ==Preamble==  ==Key==  ==Message== ==?==
+
 ffff00a2888a2  2aaa    a2222a8aa88   88
-'''
+
 
 Based off of Michael Osman's code. https://greatscottgadgets.com/
 
