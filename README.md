@@ -2,6 +2,8 @@
 The Fonz, an "easyer" to use passive scanner and transmiter for the TouchTunes Jukebox (Gen 2 and above) wireless remote. TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK, and uses a pin (000-255) for addressing. 
 This script was meant to be used with RfCat and the Yard Stick One.
 
+![screenshot](doc/thefonz.png)
+
 # Quick Start Guide
 
 0.) pip install termcolor pyusb 
