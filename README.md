@@ -28,9 +28,9 @@ This script was meant to be used with RfCat and the Yard Stick One.
   - Stops unwanted signals from reaching the target while you still have full control over the juke box
 
 ###### UPDATE V0.7
-  -Can be imported threw the iPython interface with RfCat.
-  - >>import The_Fonz as f
-  - >>f.MainMenu()
+  - Can be imported threw the iPython interface with RfCat.
+  - import The_Fonz as f
+  - f.MainMenu()
 
 ###### UPDATE V0.6
   - Cleaned up my code
