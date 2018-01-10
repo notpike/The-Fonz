@@ -22,6 +22,8 @@ This script was meant to be used with RfCat and the Yard Stick One.
 
 8.) Injoy your free drinks from your freinds :D
 
+# Versions
+
 ###### UPDATE V0.8
   - Added Electronic Warfare Mode
   - Tatical Jamming inbetween transsmissions 
