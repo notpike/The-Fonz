@@ -320,7 +320,7 @@ def MainMenu():
         mainmenu = '''\n -=Main Menu=-
 1.) Scan
 2.) TX
-3.) Eletronic Warfare Mode (%s)
+3.) Electronic Warfare Mode (%s)
 4.) Exit \n'''%(mode)
 
         print mainmenu        
