@@ -193,8 +193,7 @@ def Scan(d):
 
                 except ChipconUsbTimeoutException:
                         pass
-        null = raw_input() #Nulls enter for when you keystop, More of my bad scripting lol
-        MainMenu()
+        null = raw_input() #Nulls out enter durring a keystop, More of my bad scripting lol
 
 
 def TX(data, repeat=0):
@@ -204,7 +203,7 @@ def TX(data, repeat=0):
         d.setFreq(433.92e6)
         d.setMdmModulation(MOD_ASK_OOK)
         d.setMdmDRate(1766)
-        d.setMdmNumPreamble(0) #Still sends a 16bit 101010 for the preamble...
+        d.setMdmNumPreamble(0) 
         d.setMdmSyncMode(0)
         d.setMdmSyncWord(0)
         d.setMaxPower()
@@ -254,7 +253,7 @@ def BruteForceThisMotherFucker(CommandZero,CommandOne):
                         print "<*> BRUTE FORCE COMPLETE! TIME: %isec\n" %(TotalTime)
                         loop2 = False
                         time.sleep(2)
-                        MainMenu()
+                        return
                         
 def fuckYouMadisonPub():
         d.setModeIDLE()
@@ -282,12 +281,12 @@ def ewMenu():
                                 ewAns = raw_input("Start EW Mode? [Y/N]: ")
                                 if str.lower(ewAns) == 'n':
                                         loop = False
-                                        MainMenu()
+                                        return
                                 elif str.lower(ewAns) == 'y':
                                         loop = False
                                         ewMode = True
                                         fuckYouMadisonPub()
-                                        MainMenu()
+                                        return
                                 else:
                                         print "Not a valid choice, please try again... \n"
                                         time.sleep(.5)
@@ -295,12 +294,12 @@ def ewMenu():
                                 ewAns = raw_input("Stop EW Mode? [Y/N]: ")
                                 if str.lower(ewAns) == 'n':
                                         loop = False
-                                        MainMenu()
+                                        return
                                 elif str.lower(ewAns) == 'y':
                                         loop = False
                                         ewMode = False
                                         unFuckMadisonPub()
-                                        MainMenu()
+                                        return
                                 else:
                                         print "Not a valid choice, please try again... \n"
                                         time.sleep(.5)
@@ -310,40 +309,35 @@ def ewMenu():
                         pass
 
 def MainMenu():
-        if ewMode == True:
-                mode = colored("ON", 'red')
-        else:
-                mode = colored("OFF", 'green')
-        
-        os.system('clear')
-        print(banner)
-        mainmenu = '''\n -=Main Menu=-
-1.) Scan
-2.) TX
-3.) Eletronic Warfare Mode (%s)
-4.) Exit \n'''%(mode)
-
-        print mainmenu        
         loop = True
         while loop:
+                if ewMode == True:
+                        mode = colored("ON", 'red')
+                else:
+                        mode = colored("OFF", 'green')
+                
+                os.system('clear')
+                print(banner)
+                print '''\n -=Main Menu=-
+1.) Scan
+2.) TX
+3.) Electronic Warfare Mode (%s)
+4.) Exit \n'''%(mode)
+
                 try:
                         MenuAns=raw_input('Select [1-4]: ')
                         if int(MenuAns) == 1:
-                                loop = False                                
                                 Scan(d)
                         elif int(MenuAns) == 2:
-                                loop = False
                                 TxMenu()
                         elif int(MenuAns) == 3:
-                                loop = False
                                 ewMenu()
                         elif int(MenuAns) == 4:
                                 unFuckMadisonPub()
                                 sys.exit()
                         else: 
                                 print "Not a valid choice, please try again... \n"
-                                time.sleep(.5)
-                                
+                                time.sleep(.5)        
                 except ValueError:
                         print "Not a valid choice, please try again... \n"
                         time.sleep(.5)
@@ -354,12 +348,16 @@ def TxMenu():
         pin = PinMenu()
         if pin == 999:
                 BruteMenu()
-                MainMenu()
+                return
+
         command = CommandMenu()
+        if command == False:   ##Brakes loop if choice 33 (Back) is selected
+                return
+        
         repeat = TimesMenu()
 
         FullCommand = 'ffff00a2888a2'+pin+command
-        if len(FullCommand) % 2 != 0: #Makes sure string is even
+        if len(FullCommand) % 2 != 0: #Makes sure the string is even
                 FullCommand = FullCommand+'0'
 
         loop = True
@@ -368,21 +366,20 @@ def TxMenu():
                 TxAns = raw_input("Are you cool like the Fonz to TX '"+FullCommand+"', '"+KeyButton+"' "+repeat+" times's? [Y/N]:")
                 if str.lower(TxAns) == 'n':
                         loop = 0
-                        MainMenu()
                 elif str.lower(TxAns) == 'y':
                         Tx = True
                         while Tx:
                                 print '<*> TXing...\n'
-                                TX(FullCommand.decode('hex'), int(repeat)-1) #Dose the thing with the radio thin
+                                TX(FullCommand.decode('hex'), int(repeat)-1) #Dose the thing with the radio thing
                                 ReTransmit = raw_input("TX Again? [Y/N]")
                                 if str.lower(ReTransmit) == 'n':
                                         Tx = False
-                                        MainMenu()
+                                        return
                                 elif str.lower(ReTransmit) == 'y':
                                         Tx = True
                                 else:
                                         Tx = False
-                                        MainMenu()
+                                        return
                 else:
                         print "\nNaw, you don goofed and you're not cool... Please try again thou! :D"
                         unFuckMadisonPub()   
@@ -414,23 +411,24 @@ def CommandMenu():
         items = commands.keys()
         items.sort(reverse=1) #anti-alphabetical order
         choice = 0
+
+        #Prints commands
         for button in items:
                 choice +=1
                 print '%i.) %s' %(choice, button)
         print '%i.) Back \n' %(choice+1)
-        loop = True
-        while loop:
+
+        #Input handling
+        while True:
                 try:
                         CommandAns=raw_input('Pick a command. Select [1-%i]: ' %(choice+1))
                         if int(CommandAns) <= choice and int(CommandAns) >= 1:
                                 KeyButton = items[int(CommandAns)-1] #the chosen command in the items list
                                 value = commands[str(KeyButton)]
                                 command = value[Wcommand]
-                                loop = False
                                 return command
                         elif int(CommandAns) == choice+1:
-                                loop = False
-                                MainMenu()
+                                return
                         else:
                                 print "Not a valid choice, please try again... \n"
                                 time.sleep(.5)                                
@@ -461,10 +459,14 @@ def BruteMenu():
         items = commands.keys()
         items.sort(reverse=1) #anti-alphabetical order
         choice = 0
+
+        #Prints commands
         for button in items:
                 choice +=1
                 print '%i.) %s' %(choice, button)
         print '%i.) Back \n' %(choice+1)
+
+        #Input handling
         loop = True
         while loop:
                 try:
@@ -477,7 +479,7 @@ def BruteMenu():
                                 loop = False                                
                         elif int(CommandAns) == choice+1:
                                 loop = False
-                                MainMenu()
+                                return
                         else:
                                 print "Not a valid choice, please try again... \n"
                                 time.sleep(.5)                                
@@ -492,9 +494,10 @@ def BruteMenu():
                 TxAns = raw_input("Are you cool like the Fonz to brute force this thing? [Y/N]:")
                 if str.lower(TxAns) == 'n':
                         loop2 = False
-                        MainMenu()
+                        return
                 elif str.lower(TxAns) == 'y':
                         BruteForceThisMotherFucker(CommandZero,CommandOne)
+                        return
                 else:
                         print "\nNaw, you don goofed and you're not cool... Please try again thou! :D"
                         unFuckMadisonPub()
