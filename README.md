@@ -25,6 +25,9 @@ This script was meant to be used with RfCat and the Yard Stick One.
 8.) Injoy your free drinks from your freinds :D
 
 # Versions
+###### UPDATE V0.099999
+  - Now uses the proper encoding and decoding methods the for NEC protocol! :D
+  - Everything is better now!
 
 ###### UPDATE V0.8
   - Added Electronic Warfare Mode
