@@ -28,6 +28,7 @@ This script was meant to be used with RfCat and the Yard Stick One.
 ###### UPDATE V0.099999
   - Now uses the proper encoding and decoding methods the for NEC protocol! :D
   - Everything is better now!
+  - Check out The_Fonz_New.py for the new script!
 
 ###### UPDATE V0.8
   - Added Electronic Warfare Mode
