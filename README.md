@@ -97,4 +97,4 @@ rflib and vstruct pulled from https://github.com/ecc1/rfcat
 
 Ported to Portapack-Havoc by Furrtek https://github.com/furrtek/portapack-havoc
 
-Written by NotPike, notpike@horsefucker.org
+Written by NotPike, @IfNotPike
