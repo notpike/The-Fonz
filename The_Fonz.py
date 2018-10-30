@@ -22,7 +22,7 @@ ffff00a2888a2  2aaa    a2222a8aa88   88
 
 Based off of Michael Osman's code. https://greatscottgadgets.com/
 rflib and vstruct pulled from https://github.com/ecc1/rfcat
-Written by NotPike, notpike@horsefucker.org
+Written by NotPike. @IfNotPike
 '''
 
 from rflib import *
