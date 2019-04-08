@@ -26,63 +26,60 @@ This script was meant to be used with RfCat and the Yard Stick One.
 
 # Touch Tunes Info
 
-Frequency: 433.92MHz
-Modulation: ASK/OOK
-Protocol: NEC
-Symbol Rate: 1766
-Symbol Period: 566us
+- Frequency: 433.92MHz
+- Modulation: ASK/OOK
+- Protocol: NEC
+- Symbol Rate: 1766
+- Symbol Period: 566us
 
 ==NEC Format==
-Short(0): 10 
-Long (1): 1000
+- Short(0): 10 
+- Long (1): 1000
 
-Structure:                 <SYNC> <PREAMBLE> <PIN> <COMMAND>
-Sync (Literal Symbols):    \xff\xff\x00
-Preamble (Decoded NEC):    0x5D
-PIN 000-255 (Decoded NEC): 0x00-0xFF (LSB)
-Command (Decoded NEC):
+- Structure:                 <SYNC> <PREAMBLE> <PIN> <COMMAND>
+- Sync (Literal Symbols):    \xff\xff\x00
+- Preamble (Decoded NEC):    0x5D
+- PIN 000-255 (Decoded NEC): 0x00-0xFF (LSB)
+- Command (Decoded NEC):
 
-Note: Commands are doubled with the 2nd half being reversed.
-      For example, Pause 0x32 will translate to 0x3223 before
-      being encoded to the literal symbols. \xA8\x8A\x8A\xA2\xA8\x80
+Note: Commands are doubled with the 2nd half being reversed. For example, Pause 0x32 will translate to 0x3223 before being encoded to the literal symbols. \xA8\x8A\x8A\xA2\xA8\x80
 
-  0x32	// Pause
-  0x78	// On/Off
-  0x70	// P1
-  0x60	// P2
-  0x20	// F1
-  0xF2	// Up
-  0xA0	// F2
-  0x84	// Left
-  0x44	// OK
-  0xC4	// Right
-  0x30	// F3
-  0x80	// Down
-  0xB0	// F4
-  0xF0	// 1
-  0x08	// 2
-  0x88	// 3
-  0x48	// 4
-  0xC8	// 5
-  0x28	// 6
-  0xA8	// 7
-  0x68	// 8
-  0xE8	// 9
-  0x18	// Music_Karaoke
-  0x98	// 0
-  0x58	// Lock_Queue
-  0xD0	// Zone 1 Vol+
-  0x90	// Zone 2 Vol+
-  0xC0	// Zone 3 Vol+
-  0x50	// Zone 1 Vol-
-  0x10	// Zone 2 Vol-
-  0x40    // Zone 3 Vol-
+  - 0x32	// Pause
+  - 0x78	// On/Off
+  - 0x70	// P1
+  - 0x60	// P2
+  - 0x20	// F1
+  - 0xF2	// Up
+  - 0xA0	// F2
+  - 0x84	// Left
+  - 0x44	// OK
+  - 0xC4	// Right
+  - 0x30	// F3
+  - 0x80	// Down
+  - 0xB0	// F4
+  - 0xF0	// 1
+  - 0x08	// 2
+  - 0x88	// 3
+  - 0x48	// 4
+  - 0xC8	// 5
+  - 0x28	// 6
+  -0xA8	// 7
+  -0x68	// 8
+  -0xE8	// 9
+  -0x18	// Music_Karaoke
+  -0x98	// 0
+  -0x58	// Lock_Queue
+  -0xD0	// Zone 1 Vol+
+  -0x90	// Zone 2 Vol+
+  -0xC0	// Zone 3 Vol+
+  -0x50	// Zone 1 Vol-
+  -0x10	// Zone 2 Vol-
+  -0x40    // Zone 3 Vol-
 
-Command:             Pin 000 - On/Off
-Literal Symbols HEX: ffff00 a2888a2 aaaa 8888aa2aa2220
-Literal Symbols BIN: 11111111111111110000 10 1000 10 1000 1000 1000 10 1000 10 10 10 10 10 10 10 10 10 1000 1000 1000 1000 10 10 10 1000 10 10 10 10 1000 1000 1000 100000
-Decoded Symbols:             SYNC         S  L    S  L    L    L    S  L    S  S  S  S  S  S  S  S  S  L    L    L    L    S  S  S  L    S  S  S  S  L    L    L
-
+- Command:             Pin 000 - On/Off
+- Literal Symbols HEX: ffff00 a2888a2 aaaa 8888aa2aa2220
+- Literal Symbols BIN: 11111111111111110000 10 1000 10 1000 1000 1000 10 1000 10 10 10 10 10 10 10 10 10 1000 1000 1000 1000 10 10 10 1000 10 10 10 10 1000 1000 1000 100000
+- Decoded Symbols:             SYNC         S  L    S  L    L    L    S  L    S  S  S  S  S  S  S  S  S  L    L    L    L    S  S  S  L    S  S  S  S  L    L    L
 
 # Versions
 ###### UPDATE V0.099999
