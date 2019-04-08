@@ -42,7 +42,7 @@ This script was meant to be used with RfCat and the Yard Stick One.
 - PIN 000-255 (Decoded NEC): 0x00-0xFF (LSB)
 - Command (Decoded NEC):
 
-###### ==Comnds==
+###### ==Commands==
 Note: Commands are doubled with the 2nd half being reversed. For example, Pause 0x32 will translate to 0x3223 before being encoded to the literal symbols. \xA8\x8A\x8A\xA2\xA8\x80
 
   - 0x32	// Pause
@@ -77,6 +77,7 @@ Note: Commands are doubled with the 2nd half being reversed. For example, Pause 
   - 0x10	// Zone 2 Vol-
   - 0x40    // Zone 3 Vol-
 
+###### ==Example Encode==
 - Command:             Pin 000 - On/Off
 - Literal Symbols HEX: ffff00 a2888a2 aaaa 8888aa2aa2220
 - Literal Symbols BIN: 11111111111111110000 10 1000 10 1000 1000 1000 10 1000 10 10 10 10 10 10 10 10 10 1000 1000 1000 1000 10 10 10 1000 10 10 10 10 1000 1000 1000 100000
