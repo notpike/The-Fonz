@@ -1,4 +1,4 @@
-# About
+ # About
 The Fonz, an "easyer" to use passive scanner and transmiter for the TouchTunes Jukebox (Gen 2 and above) wireless remote. TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK, and uses a pin (000-255) for addressing. 
 This script was meant to be used with RfCat and the Yard Stick One.
 
@@ -32,7 +32,7 @@ This script was meant to be used with RfCat and the Yard Stick One.
 - Symbol Rate: 1766
 - Symbol Period: 566us
 
-==NEC Format==
+###### ==NEC Format==
 - Short(0): 10 
 - Long (1): 1000
 
@@ -42,6 +42,7 @@ This script was meant to be used with RfCat and the Yard Stick One.
 - PIN 000-255 (Decoded NEC): 0x00-0xFF (LSB)
 - Command (Decoded NEC):
 
+###### ==Comnds==
 Note: Commands are doubled with the 2nd half being reversed. For example, Pause 0x32 will translate to 0x3223 before being encoded to the literal symbols. \xA8\x8A\x8A\xA2\xA8\x80
 
   - 0x32	// Pause
@@ -63,18 +64,18 @@ Note: Commands are doubled with the 2nd half being reversed. For example, Pause 
   - 0x48	// 4
   - 0xC8	// 5
   - 0x28	// 6
-  -0xA8	// 7
-  -0x68	// 8
-  -0xE8	// 9
-  -0x18	// Music_Karaoke
-  -0x98	// 0
-  -0x58	// Lock_Queue
-  -0xD0	// Zone 1 Vol+
-  -0x90	// Zone 2 Vol+
-  -0xC0	// Zone 3 Vol+
-  -0x50	// Zone 1 Vol-
-  -0x10	// Zone 2 Vol-
-  -0x40    // Zone 3 Vol-
+  - 0xA8	// 7
+  - 0x68	// 8
+  - 0xE8	// 9
+  - 0x18	// Music_Karaoke
+  - 0x98	// 0
+  - 0x58	// Lock_Queue
+  - 0xD0	// Zone 1 Vol+
+  - 0x90	// Zone 2 Vol+
+  - 0xC0	// Zone 3 Vol+
+  - 0x50	// Zone 1 Vol-
+  - 0x10	// Zone 2 Vol-
+  - 0x40    // Zone 3 Vol-
 
 - Command:             Pin 000 - On/Off
 - Literal Symbols HEX: ffff00 a2888a2 aaaa 8888aa2aa2220
