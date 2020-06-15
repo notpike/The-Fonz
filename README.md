@@ -1,28 +1,23 @@
  # About
-The Fonz, an "easyer" to use passive scanner and transmiter for the TouchTunes Jukebox (Gen 2 and above) wireless remote. TouchTunes remotes TX at 433.92Mhz, uses ASK/OOK, and uses a pin (000-255) for addressing. 
-This script was meant to be used with RfCat and the Yard Stick One.
+The Fonz is a scanner and transmiter for the TouchTunes Jukebox (Gen 2 and above) Wireless Remote. TouchTunes uses a wireless remotes that transmits at 433.92Mhz, uses ASK/OOK, and uses a pin (000-255) for addressing. This script was meant to be used with RfCat and the Yard Stick One. This research has also been ported to the [GoodWatch](https://github.com/travisgoodspeed/goodwatch) and [Portapack-Havoc](https://github.com/furrtek/portapack-havoc) projects.
+
+The information shown in this repo is for educational use only. Please don't do anything illegal. :) 
 
 ![screenshot](doc/thefonz.png)
 
 # Quick Start Guide
+```
+$ pip install termcolor pyusb
+$ git clone https://github.com/notpike/The-Fonz.git
+$ cd The-Fonz
+$ sudo ./The_Fonz.py
 
-0.) pip install termcolor pyusb 
-
-1.) git clone https://github.com/notpike/The-Fonz.git
-
-2.) cd The-Fonz
-
-3.) sudo ./The_Fonz.py
-
-4.) Plug in the Yard Stick One
-
-5.) Choose 'Scan' to listen for transmissions
-
-6.) Input captured PIN into your own personal remote or use 'TX' to transmit commands
-
-7.) Pocket your remote or cordinate with your wingman, Smack the jukebox while skiping that one Jusin Bieber song while saying, "AYEEE!!"
-
-8.) Injoy your free drinks from your freinds :D
+## Plug In Rard Stick One
+## Select 'Scan' to listen for transmissions
+## Select 'TX' to transmit
+## Select 'EW' for Eletronic Warware Mode (Educational Purposes Only)
+## Select 'Exit' when done
+```
 
 # Touch Tunes Info
 
