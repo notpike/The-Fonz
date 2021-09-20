@@ -1,18 +1,16 @@
 #!/usr/bin/python
 
 from rflib import *
-from termcolor import colored
 import datetime
 import time
 import sys
 import os
-#import binascii
 
 banner = """    _____ _            _____               
    |_   _| |__   ___  |  ___|__  _ __  ____
      | | | '_ \ / _ \ | |_ / _ \| '_ \|_  /
      | | | | | |  __/ |  _| (_) | | | |/ / 
-     |_| |_| |_|\___| |_|  \___/|_| |_/___| V0.99999999999999999999999
+     |_| |_| |_|\___| |_|  \___/|_| |_/___| V1.0
 
 "Arthur, it's morning, have you been here all night?" """
 
@@ -127,7 +125,7 @@ def verifyPkt(pkt):
 def scan(d):
         global ewMode
         ewMode = False
-        unFuckMadisonPub()#Kills EW Mode
+        youOkMadisonPub()#Kills EW Mode
         
         d.setModeRX()
         d.setFreq(433.92e6)
@@ -159,7 +157,7 @@ def scan(d):
 
 def tx(msg, repeat=0):
         if ewMode == True:
-                unFuckMadisonPub()
+                youOkMadisonPub()
                         
         d.setFreq(433.92e6)
         d.setMdmModulation(MOD_ASK_OOK)
@@ -170,11 +168,11 @@ def tx(msg, repeat=0):
         d.RFxmit(msg, repeat)
 
         if ewMode == True:
-                fuckYouMadisonPub()
+                darnYouMadisonPub()
 
 
 #Trys every PIN for a command
-def bruteForceThisMotherFucker(command, keyButton):
+def bruteForceThisDude(command, keyButton):
         coolDown = "0000" #Gap inbetween each msg
         coolDown = coolDown.decode('hex') #decode to unicode
 
@@ -182,7 +180,7 @@ def bruteForceThisMotherFucker(command, keyButton):
         os.system('clear')
         print "\n\"What day is today?\" asked Pooh"
         time.sleep(1)
-        print "\"It's the day we burn this motherfucker to the ground.\" squeaked Piglet"
+        print "\"It's the day we burn this motherf***** to the ground.\" squeaked Piglet"
         time.sleep(2)
         print "\"My favorite day.\" said Pooh\n"
         time.sleep(1.5)
@@ -218,7 +216,7 @@ def bruteForceThisMotherFucker(command, keyButton):
         loop2 = False
         return
                         
-def fuckYouMadisonPub():
+def darnYouMadisonPub():
         d.setModeIDLE()
         d.setMaxPower()
         d.setRFRegister(PA_TABLE0, 0xFF) #PA_TABLE 0 and 1 has to do with the CC1111 OOK
@@ -227,7 +225,7 @@ def fuckYouMadisonPub():
         d.setModeTX()
         print "<*> Jamming at 433.92 MHz"
 
-def unFuckMadisonPub():
+def youOkMadisonPub():
         d.setModeIDLE()
         d.setRFRegister(PA_TABLE0, 0x00)
         d.setRFRegister(PA_TABLE1, 0x00)
@@ -238,9 +236,10 @@ def mainMenu():
         loop = True
         while loop:
                 if ewMode == True:
-                        mode = colored("ON", 'red')
+                        mode = "\033[91m" + "ON" + "\033[0m"
                 else:
-                        mode = colored("OFF", 'green')
+                        mode = "\033[92m" + "OFF" + "\033[0m"
+                        
                 os.system('clear')
                 print(banner)
                 print '''\n -=Main Menu=-
@@ -258,7 +257,7 @@ def mainMenu():
                         elif int(menuAns) == 3:
                                 ewMenu()
                         elif int(menuAns) == 4:
-                                unFuckMadisonPub()
+                                youOkMadisonPub()
                                 sys.exit()
                         else: 
                                 print "Not a valid choice, please try again... \n"
@@ -303,7 +302,7 @@ def txMenu():
                                         return
                 else:
                         print "\nNaw, you don goofed and you're not cool... Please try again thou! :D"
-                        unFuckMadisonPub()   
+                        youOkMadisonPub()   
                         sys.exit()
 
 def pinMenu():
@@ -383,11 +382,11 @@ def bruteMenu():
                         #loop2 = False
                         return
                 elif txAns.lower() == 'y':
-                        bruteForceThisMotherFucker(value, keyButton)
+                        bruteForceThisDude(value, keyButton)
                         return
                 else:
                         print "\nNaw, you don goofed and you're not cool... Please try again thou! :D"
-                        unFuckMadisonPub()
+                        youOkMadisonPub()
                         sys.exit()
 
 def ewMenu():
@@ -406,7 +405,7 @@ def ewMenu():
                                 elif ewAns.lower() == 'y':
                                         loop = False
                                         ewMode = True
-                                        fuckYouMadisonPub()
+                                        darnYouMadisonPub()
                                         return
                                 else:
                                         print "Not a valid choice, please try again... "
@@ -419,7 +418,7 @@ def ewMenu():
                                 elif ewAns.lower() == 'y':
                                         loop = False
                                         ewMode = False
-                                        unFuckMadisonPub()
+                                        youOkMadisonPub()
                                         return
                                 else:
                                         print "Not a valid choice, please try again..."
