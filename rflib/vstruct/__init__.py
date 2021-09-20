@@ -1,8 +1,11 @@
 
 import struct
-from StringIO import StringIO
+try:
+    from io import StringIO ## for Python 2
+except ImportError:
+    from io import StringIO ## for Python 3
 
-import vstruct.primitives as vs_prims
+from . import primitives as vs_prims
 
 def isVstructType(x):
     return isinstance(x, vs_prims.v_base)
@@ -88,7 +91,7 @@ class VStruct(vs_prims.v_base):
 
     # FIXME implement more arithmetic for structs...
     def __ixor__(self, other):
-        for name,value in other._vs_values.items():
+        for name,value in list(other._vs_values.items()):
             self._vs_values[name] ^= value
         return self
 
@@ -109,7 +112,7 @@ class VStruct(vs_prims.v_base):
 
             delta = len(self) % align
             if delta != 0:
-                print "PADDING %s by %d" % (name,align-delta)
+                print("PADDING %s by %d" % (name,align-delta))
                 pname = "_pad%d" % self._vs_padnum
                 self._vs_padnum += 1
                 self._vs_fields.append(pname)
@@ -181,7 +184,7 @@ class VStruct(vs_prims.v_base):
         return r
 
     def __setattr__(self, name, value):
-        # If we have this field, asign to it
+        # If we have this field, assign to it
         x = self._vs_values.get(name, None)
         if x != None:
             return self.vsSetField(name, value)
@@ -234,7 +237,7 @@ class VArray(VStruct):
     def __getitem__(self, index):
         return self.vsGetField("%d" % index)
 
-    #FIXME slice asignment
+    #FIXME slice assignment
 
 def resolve(impmod, nameparts):
     """
@@ -253,7 +256,6 @@ def resolve(impmod, nameparts):
     return m
 
 # NOTE: Gotta import this *after* VStruct/VSArray defined
-import vstruct.defs as vs_defs
 
 def getStructure(sname):
     """
@@ -262,6 +264,7 @@ def getStructure(sname):
     addStructure() or a python path (ie. win32.TEB) of a
     definition from within vstruct.defs.
     """
+    from . import defs as vs_defs
     x = resolve(vs_defs, sname.split("."))
     if x != None:
         return x()
@@ -269,9 +272,11 @@ def getStructure(sname):
     return None
 
 def getModuleNames():
+    from . import defs as vs_defs
     return [x for x in dir(vs_defs) if not x.startswith("__")]
 
 def getStructNames(modname):
+    from . import defs as vs_defs
     ret = []
     mod = resolve(vs_defs, modname)
     if mod == None:

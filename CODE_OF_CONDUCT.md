@@ -6,4 +6,4 @@ Have fun and brake stuff! :D
 
 ## Our Standards
 
-Don't be a dick!
+Don't be mean!

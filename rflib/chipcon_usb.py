@@ -1,130 +1,36 @@
-#!/usr/bin/env ipython
-import sys, threading, time, struct, select
+#!/usr/bin/env ipython3
+
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+
+from builtins import bytes
+from builtins import str
+from builtins import hex
+from builtins import range
+from builtins import object
+from past.utils import old_div
+import os
+import sys
 import usb
+import time
+import struct
+import select
+import threading
+from binascii import hexlify
 
-import bits
-from chipcondefs import *
-from rflib_defs import *
-from rflib_version import *
+from . import bits
+from .bits import correctbytes, ord23
+from .const import *
 
-DEFAULT_USB_TIMEOUT = 1000
-
-EP_TIMEOUT_IDLE     = 400
-EP_TIMEOUT_ACTIVE   = 10
-
-USB_MAX_BLOCK_SIZE  = 512
-USB_RX_WAIT         = 1000
-USB_TX_WAIT         = 10000
-
-USB_BM_REQTYPE_TGTMASK          =0x1f
-USB_BM_REQTYPE_TGT_DEV          =0x00
-USB_BM_REQTYPE_TGT_INTF         =0x01
-USB_BM_REQTYPE_TGT_EP           =0x02
-
-USB_BM_REQTYPE_TYPEMASK         =0x60
-USB_BM_REQTYPE_TYPE_STD         =0x00
-USB_BM_REQTYPE_TYPE_CLASS       =0x20
-USB_BM_REQTYPE_TYPE_VENDOR      =0x40
-USB_BM_REQTYPE_TYPE_RESERVED    =0x60
-
-USB_BM_REQTYPE_DIRMASK          =0x80
-USB_BM_REQTYPE_DIR_OUT          =0x00
-USB_BM_REQTYPE_DIR_IN           =0x80
-
-USB_GET_STATUS                  =0x00
-USB_CLEAR_FEATURE               =0x01
-USB_SET_FEATURE                 =0x03
-USB_SET_ADDRESS                 =0x05
-USB_GET_DESCRIPTOR              =0x06
-USB_SET_DESCRIPTOR              =0x07
-USB_GET_CONFIGURATION           =0x08
-USB_SET_CONFIGURATION           =0x09
-USB_GET_INTERFACE               =0x0a
-USB_SET_INTERFACE               =0x11
-USB_SYNCH_FRAME                 =0x12
-
-APP_GENERIC                     = 0x01
-APP_DEBUG                       = 0xfe
-APP_SYSTEM                      = 0xff
-
-
-SYS_CMD_PEEK                    = 0x80
-SYS_CMD_POKE                    = 0x81
-SYS_CMD_PING                    = 0x82
-SYS_CMD_STATUS                  = 0x83
-SYS_CMD_POKE_REG                = 0x84
-SYS_CMD_GET_CLOCK               = 0x85
-SYS_CMD_BUILDTYPE               = 0x86
-SYS_CMD_BOOTLOADER              = 0x87
-SYS_CMD_RFMODE                  = 0x88
-SYS_CMD_COMPILER                = 0x89
-SYS_CMD_PARTNUM                 = 0x8e
-SYS_CMD_RESET                   = 0x8f
-SYS_CMD_CLEAR_CODES             = 0x90
-
-EP0_CMD_GET_DEBUG_CODES         = 0x00
-EP0_CMD_GET_ADDRESS             = 0x01
-EP0_CMD_POKEX                   = 0x01
-EP0_CMD_PEEKX                   = 0x02
-EP0_CMD_PING0                   = 0x03
-EP0_CMD_PING1                   = 0x04
-EP0_CMD_RESET                   = 0xfe
-
-
-DEBUG_CMD_STRING                = 0xf0
-DEBUG_CMD_HEX                   = 0xf1
-DEBUG_CMD_HEX16                 = 0xf2
-DEBUG_CMD_HEX32                 = 0xf3
-DEBUG_CMD_INT                   = 0xf4
-
-EP5OUT_MAX_PACKET_SIZE          = 64
-EP5IN_MAX_PACKET_SIZE           = 64
-# EP5OUT_BUFFER_SIZE must match firmware/include/chipcon_usb.h definition
-EP5OUT_BUFFER_SIZE              = 516
-
-LC_USB_INITUSB                = 0x2
-LC_MAIN_RFIF                  = 0xd
-LC_USB_DATA_RESET_RESUME      = 0xa
-LC_USB_RESET                  = 0xb
-LC_USB_EP5OUT                 = 0xc
-LC_RF_VECTOR                  = 0x10
-LC_RFTXRX_VECTOR              = 0x11
-
-LCE_USB_EP5_TX_WHILE_INBUF_WRITTEN    = 0x1
-LCE_USB_EP0_SENT_STALL                = 0x4
-LCE_USB_EP5_OUT_WHILE_OUTBUF_WRITTEN  = 0x5
-LCE_USB_EP5_LEN_TOO_BIG               = 0x6
-LCE_USB_EP5_GOT_CRAP                  = 0x7
-LCE_USB_EP5_STALL                     = 0x8
-LCE_USB_DATA_LEFTOVER_FLAGS           = 0x9
-LCE_RF_RXOVF                          = 0x10
-LCE_RF_TXUNF                          = 0x11
-
-RCS = {}
-LCS = {}
-LCES = {}
-lcls = locals()
-for lcl in lcls.keys():
-    if lcl.startswith("LCE_"):
-        LCES[lcl] = lcls[lcl]
-        LCES[lcls[lcl]] = lcl
-    if lcl.startswith("LC_"):
-        LCS[lcl] = lcls[lcl]
-        LCS[lcls[lcl]] = lcl
-    if lcl.startswith("RC_"):
-        RCS[lcl] = lcls[lcl]
-        RCS[lcls[lcl]] = lcl
-
-CHIPS = {
-    0x91: "CC2511",
-    0x81: "CC2510",
-    0x11: "CC1111",
-    0x01: "CC1110",
-    }
-
+if os.name == 'nt':
+    import msvcrt
 
 def keystop(delay=0):
-    return len(select.select([sys.stdin],[],[],delay)[0])
+    if os.name == 'posix':
+        return len(select.select([sys.stdin],[],[],delay)[0])
+    else:
+        return msvcrt.kbhit()
 
 def getRfCatDevices():
     '''
@@ -135,11 +41,11 @@ def getRfCatDevices():
     for bus in usb.busses():
         for dev in bus.devices:
             # OpenMoko assigned or Legacy TI
-            if (dev.idVendor == 0x0451 and dev.idProduct == 0x4715) or (dev.idVendor == 0x1d50 and (dev.idProduct == 0x6047 or dev.idProduct == 0x6048 or dev.idProduct == 0x605b)):
+            if (dev.idVendor == 0x0451 and dev.idProduct == 0x4715) or (dev.idVendor == 0x1d50 and (dev.idProduct == 0x6047 or dev.idProduct == 0x6048 or dev.idProduct == 0x605b or dev.idProduct == 0xecc1)):
                 rfcats.append(dev)
 
-            elif (dev.idVendor == 0x1d50 and (dev.idProduct == 0x6049 or dev.idProduct == 0x604a)):
-                print "Already in Bootloader Mode... exiting"
+            elif (dev.idVendor == 0x1d50 and (dev.idProduct == 0x6049 or dev.idProduct == 0x604a or dev.idProduct == 0xecc0)):
+                print("Already in Bootloader Mode... exiting")
                 exit(0)
 
     return rfcats
@@ -150,13 +56,16 @@ class ChipconUsbTimeoutException(Exception):
 
 direct=False
 
-class USBDongle:
+class USBDongle(object):
     ######## INITIALIZATION ########
-    def __init__(self, idx=0, debug=False, copyDongle=None, RfMode=RFST_SRX):
+    def __init__(self, idx=0, debug=False, copyDongle=None, RfMode=RFST_SRX, safemode=False):
+        self._safemode = safemode
+        self.chipnum = None
+        self.chipstr = "uninitialized"
         self.rsema = None
         self.xsema = None
         self._bootloader = False
-        self._init_on_reconnect = True
+        self._init_on_reconnect = not safemode
         self._do = None
         self.idx = idx
         self.cleanup()
@@ -180,12 +89,12 @@ class USBDongle:
         self.send_thread.setDaemon(True)
         self.send_thread.start()
 
-        self.resetup(copyDongle=copyDongle)
         self.max_packet_size = USB_MAX_BLOCK_SIZE
+        self.resetup(copyDongle=copyDongle)
 
     def cleanup(self):
         self._usberrorcnt = 0;
-        self.recv_queue = ''
+        self.recv_queue = b''
         self.recv_mbox  = {}
         self.recv_event = threading.Event()
         self.xmit_event = threading.Event()
@@ -213,6 +122,8 @@ class USBDongle:
 
         if copyDongle is not None:
             self.devnum = copyDongle.devnum
+            self.chipnum = copyDongle.chipnum
+            self.chipstr = copyDongle.chipstr
             self._d = copyDongle._d
             self._do = copyDongle._do
             self._usbmaxi = copyDongle._usbmaxi
@@ -227,11 +138,19 @@ class USBDongle:
             self.xsema = copyDongle.xsema
             return
 
-        dongles = []
+        self._internal_select_dongle(console)
+        self.finish_setup()
+
+    def _internal_select_dongle(self, console=False):
+        '''
+        strap in USB interface.  this has to insert a ._d and ._do widget with 
+        the correct USB-like interface
+        '''
         self.ep5timeout = EP_TIMEOUT_ACTIVE
 
+        dongles = []
         for dev in getRfCatDevices():
-            if self._debug: print >>sys.stderr,(dev)
+            if self._debug: print((dev), file=sys.stderr)
             do = dev.open()
             iSN = do.getDescriptor(1,0,50)[16]
             devnum = dev.devnum
@@ -239,23 +158,20 @@ class USBDongle:
 
         dongles.sort()
         if len(dongles) == 0:
-            raise(Exception("No Dongle Found.  Please insert a RFCAT dongle."))
-
-        self.rsema = threading.Lock()
-        self.xsema = threading.Lock()
+            raise Exception("No Dongle Found.  Please insert a RFCAT dongle.")
 
         # claim that interface!
         do = dongles[self.idx][2]
         
         try:
             do.claimInterface(0)
-        except Exception,e:
-            if console or self._debug: print >>sys.stderr,("Error claiming usb interface:" + repr(e))
+        except Exception as e:
+            if console or self._debug: print(("Error claiming usb interface:" + repr(e)), file=sys.stderr)
 
 
 
         self.devnum, self._d, self._do = dongles[self.idx]
-        self._usbmaxi, self._usbmaxo = (EP5IN_MAX_PACKET_SIZE, EP5OUT_MAX_PACKET_SIZE)
+
         self._usbcfg = self._d.configurations[0]
         self._usbintf = self._usbcfg.interfaces[0][0]
         self._usbeps = self._usbintf.endpoints
@@ -265,7 +181,18 @@ class USBDongle:
             else:
                 self._usbmaxo = ep.maxPacketSize
 
+    def finish_setup(self):
+        '''
+        we've finished selecting and strapping in the usb dongle interface... continue
+        '''
+        self.rsema = threading.Lock()
+        self.xsema = threading.Lock()
+
+        self._usbmaxi, self._usbmaxo = (EP5IN_MAX_PACKET_SIZE, EP5OUT_MAX_PACKET_SIZE)
         self._threadGo.set()
+
+        if self._safemode:
+            return
 
         self.getRadioConfig()
         chip = self.getPartNum()
@@ -275,7 +202,7 @@ class USBDongle:
         self.chipstr = chipstr
 
         if chip == None:
-            print "Older firmware, consider upgrading."
+            print("Older firmware, consider upgrading.")
         else:
             self.chipstr = "unrecognized dongle: %s" % chip
 
@@ -291,42 +218,42 @@ class USBDongle:
         self._do=None
         if self._bootloader: 
             return
-        #self._threadGo = True
-        if self._debug: print >>sys.stderr,("waiting (resetup) %x" % self.idx)
+        if self._debug: print(("waiting (resetup) %x" % self.idx), file=sys.stderr)
+
         while (self._do==None):
             try:
                 self.setup(console, copyDongle)
                 if copyDongle is None:
                     self._clear_buffers(False)
-                self.ping(3, wait=10, silent=True)
-                self.setRfMode(self._rfmode)
 
-            except Exception, e:
+                if not self._safemode:
+                    self.ping(3, wait=10, silent=True)
+                    self.setRfMode(self._rfmode)
+
+            except Exception as e:
                 #if console: sys.stderr.write('.')
                 if not self._quiet:
-                    print >>sys.stderr,("Error in resetup():" + repr(e))
-                #if console or self._debug: print >>sys.stderr,("Error in resetup():" + repr(e))
+                    print(("Error in resetup():" + repr(e)), file=sys.stderr)
+                #if console or self._debug: print("Error in resetup():" + repr(e), file=sys.stderr)
                 time.sleep(1)
-
 
 
     ########  BASE FOUNDATIONAL "HIDDEN" CALLS ########
     def _sendEP0(self, request=0, buf=None, value=0x200, index=0, timeout=DEFAULT_USB_TIMEOUT):
         if buf == None:
-            buf = 'HELLO THERE'
-        #return self._do.controlMsg(USB_BM_REQTYPE_TGT_EP|USB_BM_REQTYPE_TYPE_VENDOR|USB_BM_REQTYPE_DIR_OUT, request, "\x00\x00\x00\x00\x00\x00\x00\x00"+buf, value, index, timeout), buf
+            buf = b'HELLO THERE'
         return self._do.controlMsg(USB_BM_REQTYPE_TGT_EP|USB_BM_REQTYPE_TYPE_VENDOR|USB_BM_REQTYPE_DIR_OUT, request, buf, value, index, timeout), buf
 
     def _recvEP0(self, request=0, length=64, value=0, index=0, timeout=100):
-        retary = ["%c"%x for x in self._do.controlMsg(USB_BM_REQTYPE_TGT_EP|USB_BM_REQTYPE_TYPE_VENDOR|USB_BM_REQTYPE_DIR_IN, request, length, value, index, timeout)]
+        retary = [b"%c"%x for x in self._do.controlMsg(USB_BM_REQTYPE_TGT_EP|USB_BM_REQTYPE_TYPE_VENDOR|USB_BM_REQTYPE_DIR_IN, request, length, value, index, timeout)]
         if len(retary):
-            return ''.join(retary)
-        return ""
+            return b''.join(retary)
+        return b""
 
     def _sendEP5(self, buf=None, timeout=DEFAULT_USB_TIMEOUT):
         global direct
         if (buf==None):
-            buf = "\xff\x82\x07\x00ABCDEFG"
+            buf = b"\xff\x82\x07\x00ABCDEFG"
         if direct:
             self._do.bulkWrite(5, buf, timeout)
             return
@@ -335,45 +262,45 @@ class USBDongle:
             drain = buf[:self._usbmaxo]
             buf = buf[self._usbmaxo:]
 
-            if self._debug: print >>sys.stderr,"XMIT:"+repr(drain)
+            if self._debug: print("XMIT:"+repr(drain), file=sys.stderr)
             try:
                 numwrt = self._do.bulkWrite(5, drain, timeout)
                 if numwrt != len(drain):
                     raise Exception("Didn't write all the data!? Sent: %d != Queued: %d.  REqueuing!(this may be the wrong thing to do, swat me if so)" % (numwrt, len(drain)))
-            except Exception, e:
-                if self._debug: print >>sys.stderr,"requeuing on error '%s' (%s)" % (repr(drain), e)
+            except Exception as e:
+                if self._debug: print("requeuing on error '%s' (%s)" % (repr(drain), e), file=sys.stderr)
                 self.xsema.acquire()
                 msg = self.xmit_queue.insert(0, drain)
                 self.xmit_event.set()
                 self.xsema.release()
-                if self._debug: print >>sys.stderr, repr(self.xmit_queue)
+                if self._debug: print(repr(self.xmit_queue), file=sys.stderr)
         
     def _recvEP5(self, timeout=100):
-        retary = ["%c"%x for x in self._do.bulkRead(0x85, 500, timeout)]
-        if self._debug: print >>sys.stderr,"RECV:"+repr(retary)
+        retary = [b"%c"%x for x in self._do.bulkRead(0x85, 500, timeout)]
+        if self._debug: print("RECV:"+repr(retary), file=sys.stderr)
         if len(retary):
-            return ''.join(retary)
-        return ''
+            return b''.join(retary)
+        return b''
 
     def _clear_buffers(self, clear_recv_mbox=False):
         threadGoSet = self._threadGo.isSet()
         self._threadGo.clear()
         if self._debug:
-            print >>sys.stderr,("_clear_buffers()")
+            print(("_clear_buffers()"), file=sys.stderr)
         if clear_recv_mbox:
-            for key in self.recv_mbox.keys():
+            for key in list(self.recv_mbox.keys()):
                 self.trash.extend(self.recvAll(key))
         elif self.recv_mbox.get(APP_SYSTEM) != None:
             self.trash.extend(self.recvAll(APP_SYSTEM))
         self.trash.append((time.time(),self.recv_queue))
-        self.recv_queue = ''
+        self.recv_queue = b''
         # self.xmit_queue = []          # do we want to keep this?
         if threadGoSet: self._threadGo.set()
 
 
     ######## TRANSMIT/RECEIVE THREADING ########
     def runEP5_send(self):
-        msg = ''
+        msg = b''
         self.send_threadcounter = 0
 
         while True:
@@ -403,7 +330,7 @@ class USBDongle:
                 sys.excepthook(*sys.exc_info())
 
     def runEP5_recv(self):
-        msg = ''
+        msg = b''
         self.recv_threadcounter = 0
 
         while True:
@@ -418,11 +345,11 @@ class USBDongle:
                 q = None
                 b = self.recv_mbox.get(APP_DEBUG, None)
                 if (b != None):
-                    for cmd in b.keys():
+                    for cmd in list(b.keys()):
                         q = b[cmd]
                         if len(q):
                             buf,timestamp = q.pop(0)
-                            if self._debug > 1: print >>sys.stderr,("recvthread: buf length: %x\t\t cmd: %x\t\t(%s)"%(len(buf), cmd, repr(buf)))
+                            if self._debug > 1: print(("recvthread: buf length: %x\t\t cmd: %x\t\t(%s)"%(len(buf), cmd, repr(buf))), file=sys.stderr)
 
                             if (cmd == DEBUG_CMD_STRING):
                                 if (len(buf) < 4):
@@ -433,7 +360,7 @@ class USBDongle:
                                     if self._debug: sys.stderr.write('*')
                                 else:
                                     length, = struct.unpack("<H", buf[2:4])
-                                    if self._debug >1: print >>sys.stderr,("len=%d"%length)
+                                    if self._debug >1: print(("len=%d"%length), file=sys.stderr)
                                     if (len(buf) < 4+length):
                                         if (len(q)):
                                             buf2 = q.pop(0)
@@ -444,39 +371,39 @@ class USBDongle:
                                         printbuf = buf[4:4+length]
                                         requeuebuf = buf[4+length:]
                                         if len(requeuebuf):
-                                            if self._debug>1:  print >>sys.stderr,(" - DEBUG..requeuing %s"%repr(requeuebuf))
+                                            if self._debug>1:  print((" - DEBUG..requeuing %s"%repr(requeuebuf)), file=sys.stderr)
                                             q.insert(0,requeuebuf)
-                                        print >>sys.stderr,("DEBUG: (%.3f) %s" % (timestamp, repr(printbuf)))
+                                        print(("DEBUG: (%.3f) %s" % (timestamp, repr(printbuf))), file=sys.stderr)
                             elif (cmd == DEBUG_CMD_HEX):
-                                #print >>sys.stderr, repr(buf)
-                                print >>sys.stderr, "DEBUG: (%.3f) 0x%x %d"%(timestamp, struct.unpack("B", buf[4:5])[0], struct.unpack("B", buf[4:5])[0])
+                                #print(repr(buf), file=sys.stderr)
+                                print("DEBUG: (%.3f) 0x%x %d"%(timestamp, struct.unpack("B", buf[4:5])[0], struct.unpack("B", buf[4:5])[0]), file=sys.stderr)
                             elif (cmd == DEBUG_CMD_HEX16):
-                                #print >>sys.stderr, repr(buf)
-                                print >>sys.stderr, "DEBUG: (%.3f) 0x%x %d"%(timestamp, struct.unpack("<H", buf[4:6])[0], struct.unpack("<H", buf[4:6])[0])
+                                #print(repr(buf), file=sys.stderr)
+                                print("DEBUG: (%.3f) 0x%x %d"%(timestamp, struct.unpack("<H", buf[4:6])[0], struct.unpack("<H", buf[4:6])[0]), file=sys.stderr)
                             elif (cmd == DEBUG_CMD_HEX32):
-                                #print >>sys.stderr, repr(buf)
-                                print >>sys.stderr, "DEBUG: (%.3f) 0x%x %d"%(timestamp, struct.unpack("<L", buf[4:8])[0], struct.unpack("<L", buf[4:8])[0])
+                                #print(repr(buf), file=sys.stderr)
+                                print("DEBUG: (%.3f) 0x%x %d"%(timestamp, struct.unpack("<L", buf[4:8])[0], struct.unpack("<L", buf[4:8])[0]), file=sys.stderr)
                             elif (cmd == DEBUG_CMD_INT):
-                                print >>sys.stderr, "DEBUG: (%.3f) %d"%(timestamp, struct.unpack("<L", buf[4:8])[0])
+                                print("DEBUG: (%.3f) %d"%(timestamp, struct.unpack("<L", buf[4:8])[0]), file=sys.stderr)
                             else:
-                                print >>sys.stderr,('DEBUG COMMAND UNKNOWN: %x (buf=%s)'%(cmd,repr(buf)))
+                                print(('DEBUG COMMAND UNKNOWN: %x (buf=%s)'%(cmd,repr(buf))), file=sys.stderr)
 
             except:
                 sys.excepthook(*sys.exc_info())
 
             #### receive stuff.
-            if self._debug>2: print >> sys.stderr, "recvthread: Doing receiving...",self.ep5timeout
+            if self._debug>2: print("recvthread: Doing receiving...",self.ep5timeout, file=sys.stderr)
             try:
                 #### first we populate the queue
                 msg = self._recvEP5(timeout=self.ep5timeout)
                 if len(msg) > 0:
                     self.recv_queue += msg
                     msgrecv = True
-            except usb.USBError, e:
+            except usb.USBError as e:
                 #sys.stderr.write(repr(self.recv_queue))
                 #sys.stderr.write(repr(e))
                 errstr = repr(e)
-                if self._debug>4: print >>sys.stderr,repr(sys.exc_info())
+                if self._debug>4: print(repr(sys.exc_info()), file=sys.stderr)
                 if ('No error' in errstr):
                     pass
                 elif ('Connection timed out' in errstr):
@@ -485,46 +412,43 @@ class USBDongle:
                     pass
                 else:
                     if ('could not release intf' in errstr):
-                        if self._debug: print "skipping"
+                        if self._debug: print("skipping")
                         pass
                     elif ('No such device' in errstr):
                         self._threadGo.clear()
-                        #self.resetup(False) ## THIS IS A PROBLEM.
                         self.reset_event.set()
-                        print "===== RESETUP set from recv thread"
+                        print("===== RESETUP set from recv thread")
                     elif ('Input/output error' in errstr):  # USBerror 5
                         self._threadGo.clear()
-                        #self.resetup(False) ## THIS IS A PROBLEM.
                         self.reset_event.set()
-                        print "===== RESETUP set from recv thread"
+                        print("===== RESETUP set from recv thread")
 
                     else:
-                        if self._debug: print "Error in runEP5() (receiving): %s" % errstr
+                        if self._debug: print("Error in runEP5() (receiving): %s" % errstr)
                         if self._debug>2: sys.excepthook(*sys.exc_info())
                     self._usberrorcnt += 1
                 pass
-            except AttributeError,e:
+            except AttributeError as e:
                 if "'NoneType' object has no attribute 'bInterfaceNumber'" in str(e):
-                    print "Error: dongle went away.  USB bus problems?"
+                    print("Error: dongle went away.  USB bus problems?")
                     self._threadGo.clear()
-                    #self.resetup(False)
                     self.reset_event.set()
 
             except:
                 sys.excepthook(*sys.exc_info())
 
-            if self._debug>2: print >> sys.stderr, "recvthread: Sorting mail..."
+            if self._debug>2: print("recvthread: Sorting mail...", file=sys.stderr)
             #### parse, sort, and deliver the mail.
             try:
                 # FIXME: is this robust?  or just overcomplex?
                 if len(self.recv_queue):
-                    idx = self.recv_queue.find('@')
+                    idx = self.recv_queue.find(b'@')
                     if (idx==-1):
                         if self._debug > 3:
                             sys.stderr.write('@')
                     else:
                         if (idx>0):
-                            if self._debug: print >>sys.stderr,("runEP5(): idx>0?")
+                            if self._debug: print(("runEP5(): idx>0?"), file=sys.stderr)
                             self.trash.append(self.recv_queue[:idx])
                             self.recv_queue = self.recv_queue[idx:]
                    
@@ -532,15 +456,15 @@ class USBDongle:
                         # DON'T CHANGE recv_queue from other threads!
                         msg = self.recv_queue
                         msglen = len(msg)
-                        #if self._debug > 2: print >> sys.stderr, "Sorting msg", len(msg), msg.encode("hex")
+                        #if self._debug > 2: print( "Sorting msg", len(msg), hexlify(msg)
                         while (msglen>=5):                                      # if not enough to parse length... we'll wait.
                             if not self._recv_time:                             # should be 0 to start and when done with a packet
                                 self._recv_time = time.time()
-                            app = ord(msg[1])
-                            cmd = ord(msg[2])
+                            app = ord23(msg[1])
+                            cmd = ord23(msg[2])
                             length, = struct.unpack("<H", msg[3:5])
 
-                            if self._debug>1: print>>sys.stderr,("recvthread: app=%x  cmd=%x  len=%x"%(app,cmd,length))
+                            if self._debug>1: print(("recvthread: app=%x  cmd=%x  len=%x"%(app,cmd,length)), file=sys.stderr)
 
                             if (msglen >= length+5):
                                 #### if the queue has enough characters to handle the next message... chop it and put it in the appropriate recv_mbox
@@ -588,7 +512,7 @@ class USBDongle:
             except:
                 sys.excepthook(*sys.exc_info())
 
-            if self._debug>2: print >> sys.stderr, "readthread: Loop finished"
+            if self._debug>2: print("readthread: Loop finished", file=sys.stderr)
             if not (msgrecv or len(msg)) :
                 #time.sleep(.1)
                 self.ep5timeout = EP_TIMEOUT_IDLE
@@ -613,23 +537,23 @@ class USBDongle:
             try:
                 b = self.recv_mbox.get(app)
                 if b:
-                    if self._debug: print>>sys.stderr, "Recv msg",app,b,cmd
+                    if self._debug: print("Recv msg",app,b,cmd, file=sys.stderr)
                     if cmd is None:
-                        keys = b.keys()
+                        keys = list(b.keys())
                         if len(keys):
-                            cmd = b.keys()[-1] # just grab one.   no guarantees on the order
+                            cmd = list(b.keys())[-1] # just grab one.   no guarantees on the order
 
                 if b is not None and cmd is not None:
                     q = b.get(cmd)
-                    if self._debug: print >>sys.stderr,"debug(recv) q='%s'"%repr(q)
+                    if self._debug: print("debug(recv) q='%s'"%repr(q), file=sys.stderr)
 
                     if q is not None and self.rsema.acquire(False):
-                        if self._debug>3: print ("rsema.UNlocked", "rsema.locked")[self.rsema.locked()],2
+                        if self._debug>3: print(("rsema.UNlocked", "rsema.locked")[self.rsema.locked()],2)
                         try:
                             resp, rt = q.pop(0)
 
                             self.rsema.release()
-                            if self._debug>3: print ("rsema.UNlocked", "rsema.locked")[self.rsema.locked()],2
+                            if self._debug>3: print(("rsema.UNlocked", "rsema.locked")[self.rsema.locked()],2)
 
                             # bring it on home...  this is the way out.
                             return resp[4:], rt
@@ -643,7 +567,7 @@ class USBDongle:
 
                         self.rsema.release()
 
-                self.recv_event.wait((wait - (time.time() - startTime)*1000)/1000) # wait on recv event, with timeout of remaining time
+                self.recv_event.wait(old_div((wait - (time.time() - startTime)*1000),1000)) # wait on recv event, with timeout of remaining time
                 self.recv_event.clear() # clear event, if it's set
 
             except KeyboardInterrupt:
@@ -652,7 +576,7 @@ class USBDongle:
             except:
                 sys.excepthook(*sys.exc_info())
 
-        raise(ChipconUsbTimeoutException())
+        raise ChipconUsbTimeoutException
 
     def recvAll(self, app, cmd=None):
         retval = self.recv_mbox.get(app,None)
@@ -682,12 +606,13 @@ class USBDongle:
             return retval
 
     def send(self, app, cmd, buf, wait=USB_TX_WAIT):
-        msg = "%c%c%s%s"%(app,cmd, struct.pack("<H",len(buf)),buf)
+        msg = b"%c%c%s%s" % (app, cmd, struct.pack("<H",len(buf)), buf)
         self.xsema.acquire()
         self.xmit_queue.append(msg)
         self.xmit_event.set()
         self.xsema.release()
-        if self._debug: print "Sent Msg",msg.encode("hex")
+        if self._debug: print("Sent Msg %s" %\
+                hexlify(msg))
         return self.recv(app, cmd, wait)
 
     def reprDebugCodes(self, timeout=100):
@@ -717,7 +642,7 @@ class USBDongle:
             return x
 
     def clearDebugCodes(self):
-        retval = self.send(APP_SYSTEM, SYS_CMD_CLEAR_CODES, "  ", 1000)
+        retval = self.send(APP_SYSTEM, SYS_CMD_CLEAR_CODES, b"  ", 1000)
         return LCES.get(retval)
 
     def ep0GetAddr(self):
@@ -731,7 +656,7 @@ class USBDongle:
         x = self._recvEP0(request=EP0_CMD_PEEKX, value=addr, length=length, timeout=timeout)
         return x#x[3:]
 
-    def ep0Poke(self, addr, buf='\x00', timeout=100):
+    def ep0Poke(self, addr, buf=b'\x00', timeout=100):
         x = self._sendEP0(request=EP0_CMD_POKEX, buf=buf, value=addr, timeout=timeout)
         return x
 
@@ -742,10 +667,10 @@ class USBDongle:
             #r = self._recvEP0(3, 10)
             try:
                 r = self._recvEP0(request=2, value=count, length=count, timeout=DEFAULT_USB_TIMEOUT)
-                print "PING: %d bytes received: %s"%(len(r), repr(r))
-            except ChipconUsbTimeoutException, e:
+                print("PING: %d bytes received: %s"%(len(r), repr(r)))
+            except ChipconUsbTimeoutException as e:
                 r = None
-                print "Ping Failed.",e
+                print("Ping Failed.",e)
             if r==None:
                 bad+=1
             else:
@@ -756,17 +681,17 @@ class USBDongle:
         while True:
             """
             try:
-                print >>sys.stderr, ("DONGLE RESPONDING:  mode :%x, last error# %d"%(self.getDebugCodes()))
+                print(("DONGLE RESPONDING:  mode :%x, last error# %d"%(self.getDebugCodes()), file=sys.stderr)
             except:
                 pass
-            print >>sys.stderr,('recv_queue:\t\t (%d bytes) "%s"'%(len(self.recv_queue),repr(self.recv_queue)[:len(self.recv_queue)%39+20]))
-            print >>sys.stderr,('trash:     \t\t (%d bytes) "%s"'%(len(self.trash),repr(self.trash)[:len(self.trash)%39+20]))
-            print >>sys.stderr,('recv_mbox  \t\t (%d keys)  "%s"'%(len(self.recv_mbox),repr(self.recv_mbox)[:len(repr(self.recv_mbox))%79]))
+            print('recv_queue:\t\t (%d bytes) "%s"'%(len(self.recv_queue),repr(self.recv_queue)[:len(self.recv_queue)%39+20]), file=sys.stderr)
+            print('trash:     \t\t (%d bytes) "%s"'%(len(self.trash),repr(self.trash)[:len(self.trash)%39+20]), file=sys.stderr)
+            print('recv_mbox  \t\t (%d keys)  "%s"'%(len(self.recv_mbox),repr(self.recv_mbox)[:len(repr(self.recv_mbox))%79]), file=sys.stderr)
             for x in self.recv_mbox.keys():
-                print >>sys.stderr,('    recv_mbox   %d\t (%d records)  "%s"'%(x,len(self.recv_mbox[x]),repr(self.recv_mbox[x])[:len(repr(self.recv_mbox[x]))%79]))
+                print('    recv_mbox   %d\t (%d records)  "%s"'%(x,len(self.recv_mbox[x]),repr(self.recv_mbox[x])[:len(repr(self.recv_mbox[x]))%79]), file=sys.stderr)
                 """
-            print self.reprRadioState()
-            print self.reprClientState()
+            print(self.reprRadioState())
+            print(self.reprClientState())
 
             x,y,z = select.select([sys.stdin],[],[], delay)
             if sys.stdin in x:
@@ -775,16 +700,17 @@ class USBDongle:
 
     def getPartNum(self):
         try:
-            r = self.send(APP_SYSTEM, SYS_CMD_PARTNUM, "", 10000)
-            r,rt = r
-        except ChipconUsbTimeoutException, e:
-            r = None
-            print "SETUP Failed.",e
+            r = self.send(APP_SYSTEM, SYS_CMD_PARTNUM, b"", 10000)
+            r, rt = r
+            return ord(r)
 
-        return ord(r)
+        except ChipconUsbTimeoutException as e:
+            print("SETUP Failed.",e)
+            return -1
 
 
-    def ping(self, count=10, buf="ABCDEFGHIJKLMNOPQRSTUVWXYZ", wait=DEFAULT_USB_TIMEOUT, silent=False):
+
+    def ping(self, count=10, buf=b"ABCDEFGHIJKLMNOPQRSTUVWXYZ", wait=DEFAULT_USB_TIMEOUT, silent=False):
         good=0
         bad=0
         start = time.time()
@@ -796,11 +722,11 @@ class USBDongle:
                 r,rt = r
                 istop = time.time()
                 if not silent:
-                    print "PING: %d bytes transmitted, received: %s (%f seconds)"%(len(buf), repr(r), istop-istart)
-            except ChipconUsbTimeoutException, e:
+                    print("PING: %d bytes transmitted, received: %s (%f seconds)"%(len(buf), repr(r), istop-istart))
+            except ChipconUsbTimeoutException as e:
                 r = None
                 if not silent:
-                    print "Ping Failed.",e
+                    print("Ping Failed.",e)
             if r==None:
                 bad+=1
             else:
@@ -815,13 +741,13 @@ class USBDongle:
         '''
         try:
             self._bootloader = True
-            r = self.send(APP_SYSTEM, SYS_CMD_BOOTLOADER, "", wait=1)
+            r = self.send(APP_SYSTEM, SYS_CMD_BOOTLOADER, b"", wait=1)
         except ChipconUsbTimeoutException:
             pass
         
     def RESET(self):
         try:
-            r = self.send(APP_SYSTEM, SYS_CMD_RESET, "RESET_NOW\x00")
+            r = self.send(APP_SYSTEM, SYS_CMD_RESET, b"RESET_NOW\x00")
         except ChipconUsbTimeoutException:
             pass
         
@@ -833,16 +759,28 @@ class USBDongle:
         r, t = self.send(APP_SYSTEM, SYS_CMD_POKE, struct.pack("<H", addr) + data)
         return r
     
+    def poke8(self, addr, data):
+        data = b'%c' % (data)
+        return self.poke(addr, data)
+    
+    def poke16(self, addr, data):
+        data = struct.pack('<H', data)
+        return self.poke(addr, data)
+    
     def pokeReg(self, addr, data):
         r, t = self.send(APP_SYSTEM, SYS_CMD_POKE_REG, struct.pack("<H", addr) + data)
         return r
 
     def getBuildInfo(self):
-        r, t = self.send(APP_SYSTEM, SYS_CMD_BUILDTYPE, '')
+        r, t = self.send(APP_SYSTEM, SYS_CMD_BUILDTYPE, b'')
         return r
             
     def getCompilerInfo(self):
-        r, t = self.send(APP_SYSTEM, SYS_CMD_COMPILER, '')
+        r, t = self.send(APP_SYSTEM, SYS_CMD_COMPILER, b'')
+        return r
+
+    def getDeviceSerialNumber(self):
+        r, t = self.send(APP_SYSTEM, SYS_CMD_DEVICE_SERIAL_NUMBER, b'')
         return r
             
     def getInterruptRegisters(self):
@@ -875,9 +813,9 @@ class USBDongle:
         output= []
 
         hardware = self.getBuildInfo()
-        output.append("Dongle:              %s" % hardware.split(' ')[0])
+        output.append("Dongle:              %s" % hardware.split(b' ')[0])
         try:
-            output.append("Firmware rev:        %s" % hardware.split('r')[1])
+            output.append("Firmware rev:        %s" % hardware.split(b'r')[1])
         except:
             output.append("Firmware rev:        Not found! Update needed!")
         try:
@@ -887,7 +825,7 @@ class USBDongle:
             output.append("Compiler:            Not found! Update needed!")
         # see if we have a bootloader by loooking for it's recognition semaphores
         # in SFR I2SCLKF0 & I2SCLKF1
-        if(self.peek(0xDF46,1) == '\xF0' and self.peek(0xDF47,1) == '\x0D'):
+        if(self.peek(0xDF46,1) == b'\xF0' and self.peek(0xDF47,1) == b'\x0D'):
             output.append("Bootloader:          CC-Bootloader")
         else:
             output.append("Bootloader:          Not installed")
@@ -900,7 +838,7 @@ class USBDongle:
         return "\n".join(output)
 
     def printClientState(self, width=120):
-        print self.reprClientState(width)
+        print(self.reprClientState(width))
 
     def reprClientState(self, width=120):
         output = ["="*width]
@@ -908,11 +846,11 @@ class USBDongle:
         output.append('     client errored cycles:     %d' % self._usberrorcnt)
         output.append('     recv_queue:                (%d bytes) %s'%(len(self.recv_queue),repr(self.recv_queue)[:width-42]))
         output.append('     trash:                     (%d blobs) "%s"'%(len(self.trash),repr(self.trash)[:width-44]))
-        output.append('     recv_mbox                  (%d keys)  "%s"'%(len(self.recv_mbox),repr([hex(x) for x in self.recv_mbox.keys()])[:width-44]))
-        for app in self.recv_mbox.keys():
+        output.append('     recv_mbox                  (%d keys)  "%s"'%(len(self.recv_mbox),repr([hex(x) for x in list(self.recv_mbox.keys())])[:width-44]))
+        for app in list(self.recv_mbox.keys()):
             appbox = self.recv_mbox[app]
             output.append('       app 0x%x (%d records)'%(app,len(appbox)))
-            for cmd in appbox.keys():
+            for cmd in list(appbox.keys()):
                 output.append('             [0x%x]    (%d frames)  "%s"'%(cmd, len(appbox[cmd]), repr(appbox[cmd])[:width-36]))
             output.append('')
         return "\n".join(output)
@@ -920,31 +858,33 @@ class USBDongle:
 
 
 def unittest(self, mhz=24):
-    print "\nTesting USB ping()"
+    print("\nTesting USB ping()")
     self.ping(3)
     
-    print "\nTesting USB ep0Ping()"
+    print("\nTesting USB ep0Ping()")
     self.ep0Ping()
     
-    print "\nTesting USB enumeration"
-    print "getString(0,100): %s" % repr(self._do.getString(0,100))
+    print("\nTesting USB enumeration")
+    print("getString(1,100): %s" % repr(self._do.getString(1,100)))
+    print("getString(2,100): %s" % repr(self._do.getString(2,100)))
+    print("getString(3,100): %s" % repr(self._do.getString(3,100)))
     
-    print "\nTesting USB EP MAX_PACKET_SIZE handling (ep0Peek(0xf000, 100))"
-    print repr(self.ep0Peek(0xf000, 100))
+    print("\nTesting USB EP MAX_PACKET_SIZE handling (ep0Peek(0xf000, 100))")
+    print(repr(self.ep0Peek(0xf000, 100)))
 
-    print "\nTesting USB EP MAX_PACKET_SIZE handling (peek(0xf000, 300))"
-    print repr(self.peek(0xf000, 400))
+    print("\nTesting USB EP MAX_PACKET_SIZE handling (peek(0xf000, 300))")
+    print(repr(self.peek(0xf000, 400)))
 
-    print "\nTesting USB poke/peek"
-    data = "".join([chr(c) for c in xrange(120)])
+    print("\nTesting USB poke/peek")
+    data = b"".join([correctbytes(c) for c in range(120)])
     where = 0xf300
     self.poke(where, data)
     ndata = self.peek(where, len(data))
     if ndata != data:
-        print " *FAILED*\n '%s'\n '%s'" % (data.encode("hex"), ndata.encode("hex"))
-        raise(Exception(" *FAILED*\n '%s'\n '%s'" % (data.encode("hex"), ndata.encode("hex"))))
+        print(" *FAILED*\n '%s'\n '%s'" % (hexlify(data), hexlify(ndata)))
+        raise Exception(" *FAILED*\n '%s'\n '%s'" % (hexlify(data), hexlify(ndata)))
     else:
-        print "  passed  '%s'" % (ndata.encode("hex"))
+        print("  passed  '%s'" % (hexlify(ndata)))
 
 
 if __name__ == "__main__":

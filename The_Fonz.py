@@ -285,18 +285,18 @@ def txMenu():
         while loop:
                 print "\n<*> WARNING! YOU'RE ABOUT TO DO SOME COOL THINGS!"
                 txAns = raw_input("Are you cool like the Fonz to TX '" + keyButton + "' " + repeat + " times? [Y/N]:")
-                if str.lower(txAns) == 'n':
+                if txAns.lower() == 'n':
                         loop = False
-                elif str.lower(txAns) == 'y':
+                elif txAns.lower() == 'y':
                         flag = True
                         while flag:
                                 print '<*> TXing...\n'
                                 tx(fullCommand, int(repeat)-1) #Dose the thing with the radio thing
                                 reTransmit = raw_input("TX Again? [Y/N]")
-                                if str.lower(reTransmit) == 'n':
+                                if reTransmit.lower() == 'n':
                                         flag = False
                                         return
-                                elif str.lower(reTransmit) == 'y':
+                                elif reTransmit.lower() == 'y':
                                         flag = True
                                 else:
                                         flag = False
@@ -379,10 +379,10 @@ def bruteMenu():
         while True:
                 print "\n<*> WARNING! YOU'RE ABOUT TO DO SOME COOL THINGS!"
                 txAns = raw_input("Are you cool like the Fonz to brute force this thing? [Y/N]:")
-                if str.lower(txAns) == 'n':
+                if txAns.lower() == 'n':
                         #loop2 = False
                         return
-                elif str.lower(txAns) == 'y':
+                elif txAns.lower() == 'y':
                         bruteForceThisMotherFucker(value, keyButton)
                         return
                 else:
@@ -400,10 +400,10 @@ def ewMenu():
                                 print "    allowing you to send commands to the Juke Box."
                                 print "<*> This mode stops when you 'Scan'."
                                 ewAns = raw_input("Start EW Mode? [Y/N]: ")
-                                if str.lower(ewAns) == 'n':
+                                if ewAns.lower() == 'n':
                                         loop = False
                                         return
-                                elif str.lower(ewAns) == 'y':
+                                elif ewAns.lower() == 'y':
                                         loop = False
                                         ewMode = True
                                         fuckYouMadisonPub()
@@ -413,10 +413,10 @@ def ewMenu():
                                         time.sleep(.5)
                         else:
                                 ewAns = raw_input("Stop EW Mode? [Y/N]: ")
-                                if str.lower(ewAns) == 'n':
+                                if ewAns.lower() == 'n':
                                         loop = False
                                         return
-                                elif str.lower(ewAns) == 'y':
+                                elif ewAns.lower() == 'y':
                                         loop = False
                                         ewMode = False
                                         unFuckMadisonPub()
