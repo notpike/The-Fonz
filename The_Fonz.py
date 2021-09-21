@@ -84,8 +84,6 @@ def encode(pin, command):
                 ook += '0'
         ook = codecs.decode(ook, 'hex')  
 
-        print(ook) #b'?\xff\xc0(\xa2"\x8a\xaa\xaa\x88\xa8\xa2*"\x80' 000,1,1
-
         return ook
 
 def decode(msg):
