@@ -144,8 +144,6 @@ def scan(d):
                 pkt, ts = d.RFrecv() #RX packet and timestamp
                 try:
                         if verifyPkt(pkt):
-
-                                ##msg = '{:b}'.format(int(pkt.encode('hex'),16)) #Strips leding 0's, unicode to str bin
                                 msg = '{:b}'.format(int(pkt.hex(),16)) #Strips leding 0's, unicode to str bin
                                 pin, command, dMsg = decode(msg)
                                 time = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
@@ -250,24 +248,24 @@ def mainMenu():
 3.) Electronic Warfare Mode (%s)
 4.) Exit \n'''%(mode))
 
-                #try:
-                menuAns = input('Select [1-4]: ')
-                if int(menuAns) == 1:
-                        scan(d)
-                elif int(menuAns) == 2:
-                        txMenu()
-                elif int(menuAns) == 3:
-                        ewMenu()
-                elif int(menuAns) == 4:
-                        youOkMadisonPub()
-                        sys.exit()
-                else: 
+                try:
+                        menuAns = input('Select [1-4]: ')
+                        if int(menuAns) == 1:
+                                scan(d)
+                        elif int(menuAns) == 2:
+                                txMenu()
+                        elif int(menuAns) == 3:
+                                ewMenu()
+                        elif int(menuAns) == 4:
+                                youOkMadisonPub()
+                                sys.exit()
+                        else: 
+                                print("Not a valid choice, please try again... \n")
+                                time.sleep(0.5)        
+                except ValueError:
                         print("Not a valid choice, please try again... \n")
-                        time.sleep(0.5)        
-                # except ValueError:
-                #         print("Not a valid choice, please try again... \n")
-                #         time.sleep(0.5)
-                #         pass
+                        time.sleep(0.5)
+                        pass
 
 def txMenu():
         pin = pinMenu()
