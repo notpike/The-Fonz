@@ -7,7 +7,7 @@ The information shown in this repo is for educational use only. Please don't do 
 
 # Quick Start Guide
 ```
-$ pip install termcolor pyusb
+$ pip3 install future pyusb
 $ git clone https://github.com/notpike/The-Fonz.git
 $ cd The-Fonz
 $ sudo ./The_Fonz.py
